@@ -24,6 +24,15 @@ Users can only be created in the array's own management interface:
 account is then used for the `raidcom -login` that `genarrayhash` performs and for the RMLIB
 login the collectors perform.
 
+> **Monitoring several arrays: create the same user name and password on every array.**
+> `genarrayhash` drives all arrays through one HORCM instance, and `raidcom -login` is
+> per instance, not per array: `raidcom -login <user> <pass> -IH0` logs in to every array
+> the instance knows in one go, while logging in to each array separately with `-s <serial>`
+> does not work. `genarrayhash` therefore logs in once with the credentials of the **first**
+> array in `vsptop.conf` and warns if any other array lists different ones. (The collectors
+> attach to each command device individually, so they could use different accounts, but
+> keeping one account everywhere is the only configuration that works for `genarrayhash`.)
+
 > **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
 > `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
 > Upper- and lower-case letters are both fine: the credentials are passed to the array exactly
@@ -33,14 +42,15 @@ login the collectors perform.
 Test it from the host once the HORCM instance below is running:
 
 ```sh
-/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0 -s 970272 && echo login ok
+/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0 && echo login ok     # logs in to every array in instance 0
 ```
 
 ## 2. HORCM instance (`/etc/horcm0.conf`)
 
 `raidcom` works through a HORCM daemon. vsptop6 expects **one instance that knows all the
-arrays**; `genarrayhash` then runs `raidcom … -IH<n> -s <serial>` per array. Instance `0` is
-the default (`[HORCM] INST=0` in `vsptop.conf`).
+arrays**; `genarrayhash` logs in to the instance once (`raidcom -login … -IH<n>`) and then
+runs `raidcom get … -IH<n> -s <serial>` per array. Instance `0` is the default
+(`[HORCM] INST=0` in `vsptop.conf`).
 
 Create `/etc/horcm0.conf`:
 
@@ -74,7 +84,7 @@ Start it and check:
 ```sh
 /HORCM/usr/bin/horcmstart.sh 0
 /HORCM/usr/bin/raidqry -l -IH0                 # lists both arrays with their serials
-/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0 -s 970272
+/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0
 /HORCM/usr/bin/raidcom get ldev -ldev_list mapped -key front_end -fx -IH0 -s 970272 | head -3
 ```
 
@@ -160,7 +170,7 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (no shell special characters) |
+| `user` / `pass` | the array account from section 1 (no shell special characters). **Must be the same for every array** — `genarrayhash` logs in to the HORCM instance once with the first array's credentials |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn |
 | `ldevresponse`, `mpbbusy`, `portiops`, `portmbps` | thresholds; rows exceeding any are highlighted (`?` in vsptop shows them) |
@@ -186,7 +196,9 @@ each serial. Typical problems and what they mean:
 
 | Symptom | Cause |
 |---|---|
-| `(login returned non-zero; continuing)` then no edges for that serial | wrong user/password, or the serial isn't in `horcm0.conf` |
+| `(login returned non-zero; continuing)` then no edges | wrong user/password (the first array's are used for the whole instance) |
+| `warning: <serial> has different credentials from <serial>` | arrays in `vsptop.conf` don't share one account; create the same user/password on each array |
+| no edges for one serial only | that serial isn't in `horcm0.conf`, or its account differs from the first array's |
 | edges only for one array | second `HORCM_CMD` line missing or HORCM not restarted after editing it |
 | `raidcom: command device … not found` | `cmd=` or `HORCM_CMD` names a device that moved after a reboot — re-run `inqraid` |
 
