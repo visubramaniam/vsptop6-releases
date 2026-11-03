@@ -37,7 +37,7 @@ vsptop
 | `s` / `S` | sort by the next / previous column (metrics descend, names ascend) |
 | `r` | reverse the sort |
 | `/` | filter rows by a substring (any column); `c` clears |
-| `w` | **watch**: pin the top 8 rows of the current sort (sort by `rIOPS`, `BUSY%`, `MB/s`… first) and sample just those every second with the per-item collectors `ldevstat` / `mpbstat` / `portstat`. The title shows `WATCH top 8`. `w` again, or leaving the screen or array, goes back to the array-wide sampler and the previous refresh interval. On LDEV, MP blade and port screens only. Needs the original per-item collectors installed (the RPM does) and **lower-case** credentials, since those collectors lower-case the account before logging in. |
+| `w` | **watch**: pin the top 8 rows of the current sort (sort by `rIOPS`, `BUSY%`, `MB/s`… first) and sample just those every second with the per-item collectors `ldevstat` / `mpbstat` / `portstat`. The title shows `WATCH top 8`. `w` again, or leaving the screen or array, goes back to the array-wide sampler and the previous refresh interval. On LDEV, MP blade and port screens only. Needs the per-item collectors installed (the RPM includes them). |
 | `1`–`9`, `0` | refresh every 5, 10 … 45 s; `0` = 60 s (while watching, this changes the watch interval) |
 | `↑` `↓` `PgUp` `PgDn` `Home` `End` | move |
 | `?` | help and the current thresholds |

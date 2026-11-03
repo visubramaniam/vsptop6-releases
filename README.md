@@ -17,7 +17,7 @@ dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/
 `dnf` pulls in `ncurses-libs` and `sqlite-libs`. Then:
 
 ```sh
-vi /usr/local/san/vsp/conf/vsptop.conf     # arrays, lower-case RMLIB user/password, command devices
+vi /usr/local/san/vsp/conf/vsptop.conf     # arrays, RMLIB user/password, command devices
 genarrayhash                               # builds the topology database (also hourly via cron)
 vsptop
 ```

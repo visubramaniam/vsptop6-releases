@@ -16,12 +16,9 @@ or any RMLIB write. The array account it uses should therefore be **view-only**
   `[` `]` `\` `{` `}` `` ` `` `"` `'` `&` or spaces. Use letters, digits and `; : . + - % @`
   instead. (The tools pass the password through a whitespace-separated argument file and, for
   `raidcom -login`, through a shell; the excluded characters would break or alter that.)
-- **Case:** the original Hitachi collector programs (`allldevinfo`, `allmpbinfo`,
-  `cacheinfo`, `ldevstat`, `mpbstat`) lower-case the credentials before logging in. The RPM
-  installs replacements for the first three and uses them by default, so a mixed-case password
-  works on every screen; the originals are only used as fallbacks, and `ldevstat` only with
-  `DRILLDOWN=1`. A lower-case password is therefore *recommended* — it works in every
-  configuration — and *required* if you enable `DRILLDOWN=1`.
+- **Case:** credentials are case-sensitive and passed to the array exactly as typed. (The
+  original Hitachi collector programs lower-cased them before logging in; vsptop6 removed
+  that, so mixed-case user names and passwords work with every collector.)
 - At run time `vsptop` hands each collector its credentials through a file in a private
   directory (`$XDG_RUNTIME_DIR/vsptop-<pid>/` or `/tmp/vsptop-<pid>/`, mode `0700`, files
   `0600`) that is removed when `vsptop` exits — never on the command line, so they are not

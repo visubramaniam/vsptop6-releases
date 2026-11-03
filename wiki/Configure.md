@@ -26,11 +26,9 @@ login the collectors perform.
 
 > **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
 > `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
-> **Lower-case is recommended** and required with `DRILLDOWN=1`: the original Hitachi
-> collectors (`allldevinfo`, `allmpbinfo`, `cacheinfo`, `ldevstat`, `mpbstat`) lower-case
-> the credentials before logging in; the replacement collectors installed by the RPM
-> (`allldevstat`, `allmpinfo`, `cachestat`, `allportstat`) do not, and are what `vsptop` uses
-> by default. The user name follows the same rules.
+> Upper- and lower-case letters are both fine: the credentials are passed to the array exactly
+> as typed (the original Hitachi collectors used to lower-case them; vsptop6 removed that).
+> The user name follows the same character rules.
 
 Test it from the host once the HORCM instance below is running:
 
@@ -120,7 +118,7 @@ automatically; `-c <path>` or `VSPTOP_CONF=<path>` overrides.
 [970272]
 unit=0                  # index; keep them unique and in order
 user=vsptop             # array user
-pass=vsptop2026         # see section 1: no shell special characters; lower-case recommended
+pass=vsptop2026         # see section 1: no shell special characters
 cmd=/dev/sdb            # command device on THIS host (inqraid), used by the collectors
 
 [970249]
@@ -162,7 +160,7 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (no shell special characters; lower-case recommended) |
+| `user` / `pass` | the array account from section 1 (no shell special characters) |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn |
 | `ldevresponse`, `mpbbusy`, `portiops`, `portmbps` | thresholds; rows exceeding any are highlighted (`?` in vsptop shows them) |
