@@ -11,8 +11,17 @@ or any RMLIB write. The array account it uses should therefore be **view-only**
 
 - The array user name and password are stored once, in `/usr/local/san/vsp/conf/vsptop.conf`.
   The package creates that file with mode `600`, owner `root`; keep it that way.
-- The password must be **lower-case** (a limitation of the collector programs); choose a
-  dedicated account with a long lower-case password rather than reusing an administrator's.
+- Use a **dedicated account** with a long password rather than an administrator's.
+- **Password characters:** do not use shell special characters — `#` `!` `?` `|` `$` `*`
+  `[` `]` `\` `{` `}` `` ` `` `"` `'` `&` or spaces. Use letters, digits and `; : . + - % @`
+  instead. (The tools pass the password through a whitespace-separated argument file and, for
+  `raidcom -login`, through a shell; the excluded characters would break or alter that.)
+- **Case:** the original Hitachi collector programs (`allldevinfo`, `allmpbinfo`,
+  `cacheinfo`, `ldevstat`, `mpbstat`) lower-case the credentials before logging in. The RPM
+  installs replacements for the first three and uses them by default, so a mixed-case password
+  works on every screen; the originals are only used as fallbacks, and `ldevstat` only with
+  `DRILLDOWN=1`. A lower-case password is therefore *recommended* — it works in every
+  configuration — and *required* if you enable `DRILLDOWN=1`.
 - At run time `vsptop` hands each collector its credentials through a file in a private
   directory (`$XDG_RUNTIME_DIR/vsptop-<pid>/` or `/tmp/vsptop-<pid>/`, mode `0700`, files
   `0600`) that is removed when `vsptop` exits — never on the command line, so they are not

@@ -6,7 +6,7 @@
 # 1. prerequisites on the host: Hitachi CCI (/HORCM) and the RAID Manager Library (/usr/lib64/libsvrrm.so)
 # 2. install
 dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v1.0.2/vsptop6-1.0.2-1.el9.x86_64.rpm
-# 3. configure: arrays, lower-case array user/password, command devices
+# 3. configure: arrays, array user/password (see Configure for password rules), command devices
 vi /usr/local/san/vsp/conf/vsptop.conf
 # 4. one HORCM instance that knows every array (see Configure), then build the topology
 genarrayhash
@@ -63,7 +63,7 @@ genarrayhash  [-c vsptop.conf] [-s serial] [-n] [-v]
 
 | Symptom | Meaning / fix |
 |---|---|
-| `** <collector> exited with no output for <serial>` in the footer | the collector could not log in to the array: check `user`/`pass` (lower-case) and `cmd` for that serial in `vsptop.conf` |
+| `** <collector> exited with no output for <serial>` in the footer | the collector could not log in to the array: check `user`/`pass` and `cmd` for that serial in `vsptop.conf` (password rules in [Configure](Configure)) |
 | `TOPO AGE` shows `none` | `genarrayhash` has not run for that array — run it, check `raidcom -login` works |
 | LDEV rows show `-` for metrics | the first sample takes one refresh interval; if it persists, see the `**` line |
 | ports show `-` IOPS | same; on the arrays screen each array is sampled in turn, allow a few refreshes |

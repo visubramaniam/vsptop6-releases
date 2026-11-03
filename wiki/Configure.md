@@ -24,12 +24,13 @@ Users can only be created in the array's own management interface:
 account is then used for the `raidcom -login` that `genarrayhash` performs and for the RMLIB
 login the collectors perform.
 
-> **The password must be all lower-case** (letters, digits, punctuation are fine; no
-> capitals). Five of the original collectors (`allldevinfo`, `allmpbinfo`, `cacheinfo`,
-> `ldevstat`, `mpbstat`) run `tolower()` over their whole argument file before logging in,
-> so a password with capitals never authenticates and those collectors exit silently.
-> The replacement collectors don't have this limitation, but keeping one lower-case account
-> avoids the trap entirely. The user name is lower-cased the same way.
+> **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
+> `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
+> **Lower-case is recommended** and required with `DRILLDOWN=1`: the original Hitachi
+> collectors (`allldevinfo`, `allmpbinfo`, `cacheinfo`, `ldevstat`, `mpbstat`) lower-case
+> the credentials before logging in; the replacement collectors installed by the RPM
+> (`allldevstat`, `allmpinfo`, `cachestat`, `allportstat`) do not, and are what `vsptop` uses
+> by default. The user name follows the same rules.
 
 Test it from the host once the HORCM instance below is running:
 
@@ -118,8 +119,8 @@ automatically; `-c <path>` or `VSPTOP_CONF=<path>` overrides.
 # ---- one section per serial ------------------------------------------------
 [970272]
 unit=0                  # index; keep them unique and in order
-user=vsptop             # array user, lower-case
-pass=vsptop2026         # lower-case password (see section 1)
+user=vsptop             # array user
+pass=vsptop2026         # see section 1: no shell special characters; lower-case recommended
 cmd=/dev/sdb            # command device on THIS host (inqraid), used by the collectors
 
 [970249]
@@ -161,7 +162,7 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (lower-case) |
+| `user` / `pass` | the array account from section 1 (no shell special characters; lower-case recommended) |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn |
 | `ldevresponse`, `mpbbusy`, `portiops`, `portmbps` | thresholds; rows exceeding any are highlighted (`?` in vsptop shows them) |
@@ -208,7 +209,7 @@ The arrays screen lists every array from `vsptop.conf`; `TOPO AGE` shows how old
 database is. `Enter` drills into an array; `?` lists the keys. If a screen stays on dashes:
 
 - `** <collector> exited with no output …` in the footer → the collector could not log in:
-  check `user`/`pass` (lower-case!) and `cmd` for that serial;
+  check `user`/`pass` and `cmd` for that serial (password rules in section 1);
 - `Cache Summary … (waiting for cachestat)` for more than two refreshes → same check for
   `cachestat`;
 - the `TOPO AGE` column reads `none` → `genarrayhash` has not run for that serial.
