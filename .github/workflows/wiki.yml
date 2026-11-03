@@ -1,0 +1,34 @@
+# Publish wiki/*.md to this repository's GitHub wiki whenever they change.
+# The wiki must exist first: create any page once in the web UI (Wiki tab),
+# after which this workflow owns its content.
+name: Publish wiki
+
+on:
+  push:
+    branches: [main]
+    paths: ['wiki/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone the wiki
+        run: |
+          git clone "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki
+
+      - name: Sync pages
+        run: |
+          rsync -a --delete --exclude .git wiki/ /tmp/wiki/
+          cd /tmp/wiki
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "wiki unchanged"; exit 0; }
+          git commit -m "Sync wiki from ${{ github.sha }}"
+          git push
