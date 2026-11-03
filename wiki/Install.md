@@ -6,7 +6,7 @@ It talks to the arrays two ways, and both come from Hitachi:
 | Prerequisite | Used by | What it is |
 |---|---|---|
 | **Command Control Interface (CCI / RAID Manager)** | `genarrayhash` | the `raidcom` CLI and the HORCM daemon, installed under `/HORCM` |
-| **RAID Manager Library (RMLIB)** | the collectors (`allldevstat`, `allportstat`, `cachestat`, `allmpinfo`, …) | `libsvrrm.so`, the C library the collectors link against |
+| **RAID Manager Library (RMLIB)** | the collectors (`allldevstat`, `allportstat`, `cachestat`, `allmpinfo`, …) | `libsvrrm.so`, the shared library the collectors load at run time |
 
 The RPM refuses to install until both are present. Supported platform: RHEL / Rocky / Alma 9,
 x86_64 (the release RPM is tagged `.el9`).
@@ -65,9 +65,10 @@ part of the CCI package. Install the 64-bit library:
 mkdir -p /tmp/rmlib && cd /tmp/rmlib
 unzip <downloaded-rmlib-package>.zip
 # follow the readme in the package; on Linux x64 it installs
-#   /usr/lib64/libsvrrm.so           (64-bit, the one vsptop6 needs)
+#   /usr/lib64/libsvrrm.so           (64-bit: the one the vsptop6 collectors load)
 #   /usr/lib/libsvrrm.so             (32-bit; harmless but not used)
-#   rmlib.h                          (header; vsptop6 bundles its own copy)
+# The package also ships rmlib.h; that header is only needed to compile the
+# collectors from source, not to run the RPM's binaries.
 ldconfig
 ```
 
