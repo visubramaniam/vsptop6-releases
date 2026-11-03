@@ -52,6 +52,31 @@ or any RMLIB write. The array account it uses should therefore be **view-only**
 - Each release's RPM is attached to a [GitHub Release](https://github.com/visubramaniam/vsptop6-releases/releases)
   with its SHA-256 shown on the page; verify after download with `sha256sum`.
 
+## How the code is checked
+
+Every change to the (private) source repository runs through three GitHub Actions workflows
+before it can become a release:
+
+| Workflow | What it does |
+|---|---|
+| **CI** | builds `vsptop` and `genarrayhash` on Rocky Linux 9 and runs the test suite against mock collectors and recorded `raidcom` output |
+| **Code scan** | compiles all vsptop6 code with `-Wall -Wextra -Werror`; **cppcheck** (warning, performance, portability); **gcc -fanalyzer**; **flawfinder** (any level-4+ finding fails the build unless reviewed and annotated in the source); an **AddressSanitizer + UndefinedBehaviorSanitizer** build running the full test suite with leak detection; **shellcheck**; **rpmlint** on the package spec |
+| **Release** | builds the RPM on a host that has CCI/RMLIB, after CI and the scan have passed |
+
+Design choices that follow from this:
+
+- `genarrayhash` runs `raidcom` with `fork`/`execv`, not through a shell: the array password
+  is passed as a plain argument and is never interpreted by `sh`.
+- Collectors receive their credentials through a `0600` file in a private per-process
+  directory, never on a command line.
+- Every memory allocation is checked; the sanitizer run has no findings.
+- The original Hitachi collector programs are compiled but not gated: they are kept
+  byte-for-byte as received and are only used as fallbacks when the replacement collectors
+  are absent.
+
+GitHub's own code scanning (CodeQL) is not used because it requires GitHub Advanced Security
+on a private repository.
+
 ## Reporting a problem
 
 Open an issue on [vsptop6-releases](https://github.com/visubramaniam/vsptop6-releases/issues).
