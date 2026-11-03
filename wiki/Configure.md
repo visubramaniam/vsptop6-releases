@@ -11,10 +11,18 @@ Throughout, the examples use two arrays, serial `970272` on `/dev/sdb` and `9702
 
 ## 1. Array user account
 
-Create a user on each array (Storage Navigator / Ops Center → Users, or `raidcom add user`)
-and give it a **view-only** role — *Storage Administrator (View Only)* is enough: vsptop6
-only ever reads configuration and performance counters. The same account is used for the
-`raidcom -login` that `genarrayhash` performs and for the RMLIB login the collectors perform.
+Create a user on each array and give it a **view-only** role — *Storage Administrator
+(View Only)* is enough: vsptop6 only ever reads configuration and performance counters.
+Users can only be created in the array's own management interface:
+
+- **VSP One Block (B2x / B8x)**: the **Maintenance Utility** → *Administration → User
+  Administration → User Groups / Users*;
+- **VSP 5000 and earlier**: **Storage Navigator** → *Administration → User Groups* → create the
+  user in a group that has the view-only role.
+
+`raidcom` cannot create users, and Ops Center only manages its own accounts. The same array
+account is then used for the `raidcom -login` that `genarrayhash` performs and for the RMLIB
+login the collectors perform.
 
 > **The password must be all lower-case** (letters, digits, punctuation are fine; no
 > capitals). Five of the original collectors (`allldevinfo`, `allmpbinfo`, `cacheinfo`,
