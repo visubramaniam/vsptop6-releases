@@ -217,7 +217,8 @@ database is. `Enter` drills into an array; `?` lists the keys. If a screen stays
 A quick standalone test of one collector, exactly as `vsptop` runs it:
 
 ```sh
-printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args; chmod 600 /tmp/args
-/usr/local/san/vsp/bin/cacheinfo /tmp/args      # expect: CLPR0,<size MB>,<used %>,<wp %>,<sf>
-rm -f /tmp/args
+ARGS=$(mktemp)                                    # private 0600 file with an unpredictable name
+printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > "$ARGS"
+/usr/local/san/vsp/bin/cacheinfo "$ARGS"        # expect: CLPR0,<size MB>,<used %>,<wp %>,<sf>
+rm -f "$ARGS"
 ```

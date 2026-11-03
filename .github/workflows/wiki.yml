@@ -16,11 +16,17 @@ jobs:
   wiki:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Clone the wiki
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git clone "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.wiki.git" /tmp/wiki
+          # token goes in an auth header, never in the URL or .git/config
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.extraheader=AUTHORIZATION: basic $AUTH" clone \
+            "https://github.com/${{ github.repository }}.wiki.git" /tmp/wiki
+          git -C /tmp/wiki config "http.extraheader" "AUTHORIZATION: basic $AUTH"
 
       - name: Sync pages
         run: |
