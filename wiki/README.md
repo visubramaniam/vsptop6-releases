@@ -53,7 +53,7 @@ port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
 | `r` | reverse the sort |
 | `/` | filter rows by a substring (any column); `c` clears |
 | `w` | **watch**: pin the top 8 rows of the current sort (sort by `rIOPS`, `BUSY%`, `MB/s`… first) and sample just those every second with the per-item collectors `ldevstat` / `mpbstat` / `portstat`. The title shows `WATCH top 8`. `w` again, or leaving the screen or array, goes back to the array-wide sampler and the previous refresh interval. On LDEV, MP blade and port screens only. Needs the per-item collectors installed (the RPM includes them). |
-| `1`–`9`, `0` | refresh every 5, 10 … 45 s; `0` = 60 s (while watching, this changes the watch interval) |
+| `1`–`9`, `0` | refresh every 5, 10 … 45 s; `0` = 60 s (while watching, `1`–`9` set the watch interval in seconds). A floor applies by LDEV count — up to 1000 LDEVs 5 s, up to 10000 15 s, more 30 s — and cannot be lowered: the title shows `(min)` when it is in effect |
 | `↑` `↓` `PgUp` `PgDn` `Home` `End` | move |
 | `?` | help and the current thresholds |
 | `q` | quit |

@@ -164,7 +164,7 @@ INST=831                # base RMLIB instance number; each collector uses 831..8
 # somewhere else (e.g. a source checkout).
 #BIN_DIR=/usr/local/san/vsp/bin
 #DB=/usr/local/san/vsp/var/topology.db
-REFRESH=5               # seconds between samples; keys 1-9 and 0 change it live
+REFRESH=5               # seconds between samples; keys 1-9 and 0 change it live  (floored by LDEV count: <=1000 LDEVs 5 s, <=10000 15 s, more 30 s — cannot be lowered)
 DRILLDOWN=0             # 1: use ldevstat/portstat for views of <= 8 LDEVs/ports
 ```
 
