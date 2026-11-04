@@ -5,7 +5,7 @@
 ```sh
 # 1. prerequisites on the host: Hitachi CCI (/HORCM) and the RAID Manager Library (/usr/lib64/libsvrrm.so)
 # 2. install
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v1.0.2/vsptop6-1.0.2-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v2.0.1/vsptop6-2.0.1-1.el9.x86_64.rpm
 # 3. configure: arrays, array user/password (see Configure for password rules), command devices
 vi /usr/local/san/vsp/conf/vsptop.conf
 # 4. one HORCM instance that knows every array (see Configure), then build the topology
@@ -56,6 +56,10 @@ port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
 | `1`–`9`, `0` | refresh every 5, 10 … 45 s; `0` = 60 s (while watching, `1`–`9` set the watch interval in seconds). A floor applies by LDEV count — up to 1000 LDEVs 5 s, up to 10000 15 s, more 30 s — and cannot be lowered: the title shows `(min)` when it is in effect |
 | `↑` `↓` `PgUp` `PgDn` `Home` `End` | move |
 | `?` | help and the current thresholds |
+
+The line above the footer spells out the abbreviations in the cursor row's ATTR (LDEV, MPB screens) or ROLE (port screen) column, e.g. `ATTR: GAD = global-active device, HDP = Dynamic Provisioning`.
+
+Only one `vsptop`/`vspdash` runs per host: a second start is refused with a message naming the running one. Together with the refresh floor this keeps a monitor from overloading the array's controllers (see [Security](Security)).
 | `q` | quit |
 
 Rows at a threshold's warning level (`[THRESHOLD]` in `vsptop.conf`: response time 2–5 ms, MP busy or link utilisation 50–60 %) are amber, at the problem level (above 5 ms / 60 %) red; `highlight=` changes the problem colour (amber, green, underline, bold, reverse, dim).

@@ -86,7 +86,7 @@ If only `/usr/lib/libsvrrm.so` exists you have the 32-bit library; install the x
 From the GitHub release (the `.el9` RPM works on RHEL/Rocky/Alma 9):
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v1.0.2/vsptop6-1.0.2-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v2.0.1/vsptop6-2.0.1-1.el9.x86_64.rpm
 ```
 
 `dnf` fetches `ncurses-libs` and `sqlite-libs` from the OS repositories, runs the
