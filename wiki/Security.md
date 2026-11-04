@@ -28,6 +28,15 @@ or any RMLIB write. The array account it uses should therefore be **view-only**
   If that is a concern on a shared host, run `raidcom -login` interactively once per boot
   from a session that stays logged in, and leave `pass=` unused for `genarrayhash`.
 
+## One instance per host
+
+`vsptop` and `vspdash` take a lock (`var/vsptop.lock`, next to `topology.db`) while they run,
+so a second copy started by anyone on the same host is refused with a message naming the
+running one (program, pid, user, start time). Each instance drives its own RMLIB samplers
+against the same command devices, and two sets would double the load on the array's
+controllers — the same reason the refresh interval is floored by LDEV count. Several people
+can still share one session (`tmux`/`screen`), or run from different hosts.
+
 ## Privileges on the host
 
 - Reading a command device requires access to the raw block device, which normally means
