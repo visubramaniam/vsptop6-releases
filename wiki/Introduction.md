@@ -29,10 +29,10 @@ ARRAYS ──Enter──► LDEVS ──h──► HOST GROUPS ──p──► 
 | Screen | Columns |
 |---|---|
 | **Arrays** | serial, name, #LDEVs, #host groups, #ports, cache used %, write-pending %, total IOPS and MB/s, age of the topology data |
-| **LDEVs** | read/write IOPS, read/write response time (µs), read/write MB/s, emulation, MP blade, pool, attributes (`VOL_ATTR` minus the constant `CVS`: HDP, JNL, POOL, GAD, ELUN …), NVMe subsystem id, host groups |
-| **Host groups** | #LDEVs, read/write IOPS, max response time, read/write MB/s, ports, pools |
+| **LDEVs** | read/write IOPS, read/write response time (µs), read/write MB/s, emulation, MP blade, pool, attributes (`VOL_ATTR` minus the constant `CVS`: HDP, JNL, POOL, GAD, ELUN …), NVMe subsystem id, SSID (mainframe), virtual LDEV id (GAD / VSM volumes), resource group (`RSGID` resolved to its `RS_GROUP` name) |
+| **Host groups** | host mode, #LDEVs, read/write IOPS, max response time, read/write MB/s, ports, pools |
 | **MP blades** | per MP: busy %, cache usage, write pending, role, owning resource, #LDEVs |
-| **Ports** | type (FIBRE/ISCSI/NVME_TCP/FICON), attributes (TAR/MCU/RCU/ELUN), IOPS, MB/s, #host groups, #LDEVs, NVMe subsystem ids, host groups |
+| **Ports** | type (FIBRE/ISCSI/NVME_TCP/FICON), attributes (TAR/MCU/RCU/ELUN), IOPS, MB/s, #host groups, #LDEVs, NVMe subsystem ids |
 
 Every screen has a three-line header: the title (array, screen, scope, sort column, refresh
 rate), a **Cache Summary** (capacity, usage and write-pending in MB and %) and a **Storage
