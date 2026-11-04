@@ -36,7 +36,7 @@ red because its 9.4 / 13.9 ms response times are over the 5 ms problem level whi
 
 ## Host groups
 
-![Host groups](images/screen-hostgroups.png)
+![Host groups](images/screen-hostgroups-hd.png)
 
 One row per host group: host mode and type (FIBRE for WWN groups, iSCSI for IQN groups),
 member count, read/write IOPS, the worst response time among its LDEVs, MB/s, `RND%` and
