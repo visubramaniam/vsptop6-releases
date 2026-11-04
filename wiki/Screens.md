@@ -58,8 +58,14 @@ blade.
 
 ## Ports
 
-The port screen (not pictured) lists each installed port with its type, attributes
-(`TAR`, `MCU`, `RCU`, `ELUN`), link speed, IOPS and MB/s, read/write IOPS, read/write
-response time, read/write MB/s, the number of LDEVs mapped and NVMe subsystem ids; in
-`vspdash` the right-hand column is a bar of how much of the link speed the current MB/s
-consumes (`LINK%`). `Enter` lists the port's LDEVs; `h` its host groups.
+![Ports](images/screen-ports.png)
+
+One row per installed port: type (FIBRE, ISCSI, NVME_TCP, FICON), attributes (`TAR` target,
+`MCU`/`RCU` replication initiator/target, `ELUN` external-storage initiator), link speed in
+Gbps, IOPS and MB/s, how much of the link the current MB/s consumes (`LINK%`), read/write
+IOPS, read/write response time, read/write MB/s, the number of LDEVs mapped and any NVMe
+subsystem ids. The right-hand column is a bar of `LINK%`. In this capture CL1-A carries
+601 k IOPS at 2.35 GB/s — 73 % of its 32G link, over the 60 % problem level, so the row is
+red — while CL2-A sits at 50 %. The ports panel above lists the six busiest ports with their
+average response time; CL2-D shows NVMe/TCP traffic at 100G. `Enter` lists the port's LDEVs;
+`h` its host groups.
