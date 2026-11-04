@@ -11,19 +11,32 @@ vi /usr/local/san/vsp/conf/vsptop.conf
 # 4. one HORCM instance that knows every array (see Configure), then build the topology
 genarrayhash
 # 5. run
-vsptop
+vsptop                 # top-like table
+vspdash                # the same monitor as a btop-style dashboard
 ```
 
 ## What gets installed
 
 ```
-/usr/local/san/vsp/bin/     vsptop, genarrayhash, collectors
+/usr/local/san/vsp/bin/     vsptop, vspdash, genarrayhash, collectors
 /usr/local/san/vsp/conf/    vsptop.conf, vsptop.conf.example
 /usr/local/san/vsp/var/     topology.db
 /usr/local/san/vsp/doc/     this documentation
-/usr/bin/vsptop, /usr/bin/genarrayhash   (symlinks)
+/usr/bin/vsptop, /usr/bin/vspdash, /usr/bin/genarrayhash   (symlinks)
 /etc/cron.d/vsptop6         hourly genarrayhash
 ```
+
+## vspdash — the dashboard view
+
+`vspdash` is the same monitor as a btop-style dashboard: the current array's IOPS / MB/s /
+response-time history, cache and pool meters, MP-blade busy meters, per-port sparklines, and
+the table you would see in `vsptop` in the bottom panel, with a **trend** column graphing the
+sort column over the last eight samples. Every `vsptop` key works unchanged (drill, sort,
+filter, `w` watch); the panels above always follow the current array. It wants a UTF-8,
+256-colour terminal (`TERM=xterm-256color`) and about 34 rows; narrower terminals get fewer
+port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
+
+![vspdash](images/vspdash.png)
 
 ## Keys
 

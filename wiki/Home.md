@@ -6,6 +6,7 @@ MP blades and ports, with drill-down between them, refreshing every few seconds.
 | Page | What it covers |
 |---|---|
 | [Introduction](Introduction) | What vsptop6 is, the screens, how it works |
+| [README](README) | Quick start, `vsptop` and `vspdash`, key reference |
 | [Install](Install) | Prerequisites (CCI, RAID Manager Library), command devices, the RPM |
 | [Configure](Configure) | Array user account, `horcm0.conf`, `vsptop.conf`, building the topology |
 | [README](README) | Quick start and key reference |

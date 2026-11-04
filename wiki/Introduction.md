@@ -41,6 +41,19 @@ Summary** (array-wide total/read/write IOPS and MB/s).
 Rows that exceed a threshold you set — LDEV response time, MP busy %, port IOPS or MB/s — are
 drawn in green reverse video so they stand out at a glance.
 
+## Two front ends
+
+The RPM installs two programs that share everything but the screen layout:
+
+- **`vsptop`** — the classic `top`-like table above: one screen at a time, three header lines.
+- **`vspdash`** — a btop-style dashboard. The current array's IOPS, MB/s and response-time
+  history, cache and pool capacity meters, MP-blade busy meters and per-port sparklines sit in
+  panels above the same table, which gains a **trend** column graphing the sort column over the
+  last eight samples. All keys are identical; drilling, sorting, filtering and `w` watch change
+  the table panel while the panels above keep following the current array.
+
+![vspdash](images/vspdash.png)
+
 ## How it works
 
 ```
