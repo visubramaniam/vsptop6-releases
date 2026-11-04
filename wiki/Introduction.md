@@ -32,13 +32,13 @@ ARRAYS ──Enter──► LDEVS ──h──► HOST GROUPS ──p──► 
 | **LDEVs** | read/write IOPS, read/write response time (µs), read/write MB/s, emulation, MP blade, pool, attributes (`VOL_ATTR` minus the constant `CVS`: HDP, JNL, POOL, GAD, ELUN …), NVMe subsystem id, SSID (mainframe), virtual LDEV id (GAD / VSM volumes), resource group (`RSGID` resolved to its `RS_GROUP` name) |
 | **Host groups** | host mode, type (FIBRE for WWN groups, iSCSI for IQN groups), #LDEVs, read/write IOPS, max response time, read/write MB/s, ports, pools |
 | **MP blades** | per MP: busy %, cache usage, write pending, role, owning resource, #LDEVs |
-| **Ports** | type (FIBRE/ISCSI/NVME_TCP/FICON), attributes (TAR/MCU/RCU/ELUN), IOPS, MB/s, #host groups, #LDEVs, NVMe subsystem ids |
+| **Ports** | type (FIBRE/ISCSI/NVME_TCP/FICON), attributes (TAR/MCU/RCU/ELUN), IOPS, MB/s, read/write IOPS, read/write response time (µs), read/write MB/s, #host groups, #LDEVs, NVMe subsystem ids |
 
 Every screen has a three-line header: the title (array, screen, scope, sort column, refresh
 rate), a **Cache Summary** (capacity, usage and write-pending in MB and %) and a **Storage
 Summary** (array-wide total/read/write IOPS and MB/s).
 
-Rows that exceed a threshold you set — LDEV response time, MP busy %, port IOPS or MB/s — are
+Rows that exceed a threshold you set — LDEV or port response time, MP busy %, port IOPS or MB/s — are
 drawn in green reverse video so they stand out at a glance.
 
 ## Two front ends
