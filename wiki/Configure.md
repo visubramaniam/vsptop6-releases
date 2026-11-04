@@ -233,6 +233,6 @@ A quick standalone test of one collector, exactly as `vsptop` runs it:
 ```sh
 ARGS=$(mktemp)                                    # private 0600 file with an unpredictable name
 printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > "$ARGS"
-/usr/local/san/vsp/bin/cacheinfo "$ARGS"        # expect: CLPR0,<size MB>,<used %>,<wp %>,<sf>
+timeout 8 /usr/local/san/vsp/bin/cachestat "$ARGS"   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
 rm -f "$ARGS"
 ```
