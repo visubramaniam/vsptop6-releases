@@ -30,8 +30,10 @@ vspdash                # the same monitor as a btop-style dashboard
 
 `vspdash` is the same monitor as a btop-style dashboard: the current array's IOPS / MB/s /
 response-time history, cache and pool meters, MP-blade busy meters, per-port sparklines, and
-the table you would see in `vsptop` in the bottom panel, with a **trend** column graphing the
-sort column over the last eight samples. Every `vsptop` key works unchanged (drill, sort,
+the table you would see in `vsptop` in the bottom panel, with a right-hand graph column: a bar of
+each MP's current busy % on the MP blade screen, and on the port screen a bar of how much of the
+port's link speed (`LNKSPD`, Gbps) the current MB/s consumes — 32G fibre ≈ 3200 MB/s, 100G
+Ethernet ≈ 12500 MB/s. Every `vsptop` key works unchanged (drill, sort,
 filter, `w` watch); the panels above always follow the current array. It wants a UTF-8,
 256-colour terminal (`TERM=xterm-256color`) and about 34 rows; narrower terminals get fewer
 port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
