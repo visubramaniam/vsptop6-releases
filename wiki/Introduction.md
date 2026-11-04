@@ -41,6 +41,8 @@ Summary** (array-wide total/read/write IOPS and MB/s).
 Rows past a threshold you set — response time (LDEVs, host groups, ports), MP busy %, port link
 utilisation — are amber at the warning level and red at the problem level so they stand out at a glance (amber/green/underline are available via `highlight=`). Cache usage is shown without a warning colour — a Hitachi array keeps its cache full by design; write-pending is the figure to watch.
 
+Screenshots of each screen, with notes, are on the [Screens](Screens) page.
+
 ## Two front ends
 
 The RPM installs two programs that share everything but the screen layout:

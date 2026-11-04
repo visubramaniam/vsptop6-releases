@@ -7,6 +7,7 @@ ends share one engine: `vsptop` (classic table) and `vspdash` (btop-style dashbo
 | Page | What it covers |
 |---|---|
 | [Introduction](Introduction) | What vsptop6 is, the screens, how it works |
+| [Screens](Screens) | Annotated screenshots of every screen |
 | [README](README) | Quick start, `vsptop` and `vspdash`, key reference |
 | [Install](Install) | Prerequisites (CCI, RAID Manager Library), command devices, the RPM |
 | [Configure](Configure) | Array user account, `horcm0.conf`, `vsptop.conf`, building the topology |

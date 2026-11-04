@@ -2,6 +2,7 @@
 
 - [Home](Home)
 - [Introduction](Introduction)
+- [Screens](Screens)
 - [Install](Install)
 - [Configure](Configure)
 - [README](README)
