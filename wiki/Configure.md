@@ -142,6 +142,7 @@ cmd=/dev/sdc
 highlight=red           # rows over a threshold: red (default) | amber | green | underline | bold | reverse | dim
 responsewarn=2000       # response time, microseconds: LDEV r/w RT, host-group max RT, port r/w RT
 responsealert=5000      #   2-5 ms is a warning (amber), above 5 ms a problem (red)
+activeiops=100          #   ...and only when read or write IOPS exceed this: idle volumes report noisy response times
 mpbwarn=50              # MP busy %: 50-60 warning, above 60 a problem
 mpbalert=60
 linkwarn=50             # port link utilisation (MB/s as % of LNKSPD): 50-60 warning, above 60 a problem
@@ -176,7 +177,7 @@ Field by field:
 | `user` / `pass` | the array account from section 1 (no shell special characters). **Must be the same for every array** — `genarrayhash` logs in to the HORCM instance once with the first array's credentials |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
-| `responsewarn` / `responsealert`, `mpbwarn` / `mpbalert`, `linkwarn` / `linkalert` | warning (amber) and problem (red) levels for response time (LDEVs, host groups, ports), MP busy % and port link utilisation; `?` in vsptop shows them. `ldevresponse` and `mpbbusy` from older files are read as the problem level; `portiops` / `portmbps` are ignored |
+| `responsewarn` / `responsealert`, `mpbwarn` / `mpbalert`, `linkwarn` / `linkalert` | warning (amber) and problem (red) levels for response time (LDEVs, host groups, ports — judged only while read or write IOPS exceed `activeiops`, default 100), MP busy % and port link utilisation; `?` in vsptop shows them. `ldevresponse` and `mpbbusy` from older files are read as the problem level; `portiops` / `portmbps` are ignored |
 | `[HORCM] BASE`, `INST` | where `raidcom` is and which instance holds the command devices |
 | `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–837 collide with other RMLIB clients on the host |
 | `REFRESH` | sampling interval in seconds |
