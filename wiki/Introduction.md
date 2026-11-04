@@ -67,9 +67,10 @@ The RPM installs two programs that share everything but the screen layout:
    allldevstat   allportstat   allmpinfo   cachestat        (RAID Manager Library)
 ```
 
-- **`genarrayhash`** asks `raidcom` for every LDEV, host group, port, pool, MP assignment and
-  NVMe subsystem and stores the relationships in a small SQLite file. It runs hourly; the
-  arrays screen shows how old the data is.
+- **`genarrayhash`** asks `raidcom` for every LDEV (emulation, attributes, MP, pool, SSID,
+  virtual id, resource group), host group (members, host mode), port (type, attributes), pool
+  (members, capacity), resource group and NVMe subsystem, and stores the relationships in a
+  small SQLite file. It runs hourly; the arrays screen shows how old the data is.
 - **`vsptop`** starts the collectors it needs for the current screen, reads their output, joins
   it with the topology, and draws the table. Collectors are small C programs that talk to the
   array through the RAID Manager Library over a command device; they never write to the array.

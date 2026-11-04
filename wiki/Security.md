@@ -2,8 +2,8 @@
 
 ## What vsptop6 can do to an array
 
-Nothing. Every call it makes is a read: `raidcom get …` for configuration and RAID Manager
-Library `getrminfo()` for performance counters. It never issues a `raidcom add/modify/delete`
+Nothing. Every call it makes is a read: `raidcom get ldev / port / host_grp / pool / resource`
+for configuration and RAID Manager Library `getrminfo()` for performance counters. It never issues a `raidcom add/modify/delete`
 or any RMLIB write. The array account it uses should therefore be **view-only**
 (*Storage Administrator (View Only)*); it does not need, and should not have, any other role.
 
