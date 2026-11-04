@@ -39,7 +39,7 @@ rate), a **Cache Summary** (capacity, usage and write-pending in MB and %) and a
 Summary** (array-wide total/read/write IOPS and MB/s).
 
 Rows that exceed a threshold you set — LDEV or port response time, MP busy %, port IOPS or MB/s — are
-drawn in green reverse video so they stand out at a glance.
+drawn in red reverse video so they stand out at a glance (amber/green/underline are available via `highlight=`). Cache usage is shown without a warning colour — a Hitachi array keeps its cache full by design; write-pending is the figure to watch.
 
 ## Two front ends
 

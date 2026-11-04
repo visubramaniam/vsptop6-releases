@@ -58,7 +58,7 @@ port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
 | `?` | help and the current thresholds |
 | `q` | quit |
 
-Rows over a threshold (`[THRESHOLD]` in `vsptop.conf`) are green in reverse video.
+Rows over a threshold (`[THRESHOLD]` in `vsptop.conf`) are drawn in red reverse video (`highlight=` selects amber, green, underline, bold, reverse or dim instead).
 
 ## Command-line options
 

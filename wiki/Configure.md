@@ -139,7 +139,7 @@ cmd=/dev/sdc
 
 # ---- highlighting ------------------------------------------------------------
 [THRESHOLD]
-highlight=green         # rows over a threshold: green | underline | bold | reverse | dim
+highlight=red           # rows over a threshold: red (default) | amber | green | underline | bold | reverse | dim
 ldevresponse=8000       # LDEV read or write response time, microseconds
 mpbbusy=50              # MP busy %
 portiops=8000           # port IOPS
@@ -172,7 +172,7 @@ Field by field:
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
 | `user` / `pass` | the array account from section 1 (no shell special characters). **Must be the same for every array** — `genarrayhash` logs in to the HORCM instance once with the first array's credentials |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
-| `highlight` | how threshold breaches are drawn |
+| `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
 | `ldevresponse`, `mpbbusy`, `portiops`, `portmbps` | thresholds; rows exceeding any are highlighted (`?` in vsptop shows them) |
 | `[HORCM] BASE`, `INST` | where `raidcom` is and which instance holds the command devices |
 | `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–837 collide with other RMLIB clients on the host |
