@@ -38,8 +38,8 @@ Every screen has a three-line header: the title (array, screen, scope, sort colu
 rate), a **Cache Summary** (capacity, usage and write-pending in MB and %) and a **Storage
 Summary** (array-wide total/read/write IOPS and MB/s).
 
-Rows that exceed a threshold you set — LDEV or port response time, MP busy %, port IOPS or MB/s — are
-drawn in red reverse video so they stand out at a glance (amber/green/underline are available via `highlight=`). Cache usage is shown without a warning colour — a Hitachi array keeps its cache full by design; write-pending is the figure to watch.
+Rows past a threshold you set — response time (LDEVs, host groups, ports), MP busy %, port link
+utilisation — are amber at the warning level and red at the problem level so they stand out at a glance (amber/green/underline are available via `highlight=`). Cache usage is shown without a warning colour — a Hitachi array keeps its cache full by design; write-pending is the figure to watch.
 
 ## Two front ends
 

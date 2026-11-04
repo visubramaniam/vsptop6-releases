@@ -140,10 +140,13 @@ cmd=/dev/sdc
 # ---- highlighting ------------------------------------------------------------
 [THRESHOLD]
 highlight=red           # rows over a threshold: red (default) | amber | green | underline | bold | reverse | dim
-ldevresponse=8000       # LDEV read or write response time, microseconds
-mpbbusy=50              # MP busy %
-portiops=8000           # port IOPS
-portmbps=800            # port MB/s
+responsewarn=2000       # response time, microseconds: LDEV r/w RT, host-group max RT, port r/w RT
+responsealert=5000      #   2-5 ms is a warning (amber), above 5 ms a problem (red)
+mpbwarn=50              # MP busy %: 50-60 warning, above 60 a problem
+mpbalert=60
+linkwarn=50             # port link utilisation (MB/s as % of LNKSPD): 50-60 warning, above 60 a problem
+linkalert=60
+# no thresholds on IOPS or MB/s: both depend on the block size
 
 # ---- CCI -----------------------------------------------------------------------
 [HORCM]
@@ -173,7 +176,7 @@ Field by field:
 | `user` / `pass` | the array account from section 1 (no shell special characters). **Must be the same for every array** — `genarrayhash` logs in to the HORCM instance once with the first array's credentials |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
-| `ldevresponse`, `mpbbusy`, `portiops`, `portmbps` | thresholds; rows exceeding any are highlighted (`?` in vsptop shows them) |
+| `responsewarn` / `responsealert`, `mpbwarn` / `mpbalert`, `linkwarn` / `linkalert` | warning (amber) and problem (red) levels for response time (LDEVs, host groups, ports), MP busy % and port link utilisation; `?` in vsptop shows them. `ldevresponse` and `mpbbusy` from older files are read as the problem level; `portiops` / `portmbps` are ignored |
 | `[HORCM] BASE`, `INST` | where `raidcom` is and which instance holds the command devices |
 | `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–837 collide with other RMLIB clients on the host |
 | `REFRESH` | sampling interval in seconds |
