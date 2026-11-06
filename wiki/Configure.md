@@ -247,7 +247,7 @@ database is. `Enter` drills into an array; `?` lists the keys. If a screen stays
 A quick standalone test of one collector, exactly as `vsptop` runs it:
 
 ```sh
-printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args; chmod 600 /tmp/args
+(umask 077; printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args)   # created mode 600, never world-readable
 timeout 8 /usr/local/san/vsp/bin/cachestat /tmp/args   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
 rm -f /tmp/args
 ```
