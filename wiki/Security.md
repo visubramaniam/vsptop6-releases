@@ -23,11 +23,10 @@ records and performance counters and, only when CCI is installed, `raidcom get h
   directory (`$XDG_RUNTIME_DIR/vsptop-<pid>/` or `/tmp/vsptop-<pid>/`, mode `0700`, files
   `0600`) that is removed when `vsptop` exits — never on the command line, so they are not
   visible in `ps`.
-- With CCI installed (optional), each topology refresh logs in with `raidcom -login <user>
-  <password>`; the password is on that command line for the fraction of a second the login
-  takes. This is how CCI's login works. If that is a concern on a shared host, set
-  `[HORCM] USE=no` in `vsptop.conf` — the only cost is host-group names cut at 16 characters
-  and NVMe subsystems numbered by position.
+- With CCI installed (optional), each topology refresh logs in to HORCM by running
+  `raidcom -login` **without arguments** on a private pseudo-terminal and answering its
+  per-array `User` / `Password` prompts from `vsptop.conf` — the same way an operator would
+  type them. The password never appears on a command line, in `ps`, or in the environment.
 
 ## One instance per host
 
@@ -73,8 +72,9 @@ before it can become a release:
 
 Design choices that follow from this:
 
-- The optional `raidcom` calls use `fork`/`execv`, not a shell: the array password is passed
-  as a plain argument and is never interpreted by `sh`.
+- The optional `raidcom` calls use `fork`/`execv`, not a shell, and the login is answered
+  through a pseudo-terminal: the array password is never a command-line argument and is never
+  interpreted by `sh`.
 - Collectors receive their credentials through a `0600` file in a private per-process
   directory, never on a command line.
 - Every memory allocation is checked; the sanitizer run has no findings.
