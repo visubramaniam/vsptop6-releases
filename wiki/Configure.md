@@ -32,7 +32,8 @@ installed, for the `raidcom -login` that the topology refresh performs.
 > Serial#[N] :` / `Password :` prompts, one pair per array the HORCM instance knows, with
 > that serial's credentials from `vsptop.conf` — so the password is never on a command line
 > and no array has to share an account. An array in `horcm0.conf` that is not in
-> `vsptop.conf` is answered with the first array's account (and its login simply fails).
+> `vsptop.conf` is answered with empty lines — no credentials go to an array that is not
+> configured — and its login simply fails.
 
 > **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
 > `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
@@ -87,7 +88,7 @@ Start it and check:
 ```sh
 /HORCM/usr/bin/horcmstart.sh 0
 /HORCM/usr/bin/raidqry -l -IH0                 # lists both arrays with their serials
-/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0
+/HORCM/usr/bin/raidcom -login -IH0             # prompts for the user and password of each array (never put them on the command line)
 /HORCM/usr/bin/raidcom get ldev -ldev_list mapped -key front_end -fx -IH0 -s 970272 | head -3
 ```
 
@@ -213,7 +214,7 @@ the background while the screens keep running. To build or check it by hand:
 ```sh
 vsptop -T -v                 # rebuild every array and exit; -v shows each step
 vsptop -T -s 970272          # one array only
-/usr/local/san/vsp/bin/topostat /tmp/args | awk -F'\t' '{print $1, $2}' | sort | uniq -c   # raw edges (args file as in section 5)
+/usr/local/san/vsp/bin/topostat "$ARGS" | awk -F'\t' '{print $1, $2}' | sort | uniq -c   # raw edges (args file as in section 5)
 ```
 
 You should see `HG_LDEV`, `PORT_HG`, `LDEV_MPB`, `LDEV_POOL`, `PORT_ROLE`, `LDEV_EMUL` … for
@@ -245,7 +246,8 @@ database is. `Enter` drills into an array; `?` lists the keys. If a screen stays
 A quick standalone test of one collector, exactly as `vsptop` runs it:
 
 ```sh
-(umask 077; printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args)   # created mode 600, never world-readable
-timeout 8 /usr/local/san/vsp/bin/cachestat /tmp/args   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
-rm -f /tmp/args
+ARGS=$(mktemp)                                       # a private file: mode 600, unpredictable name
+printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > "$ARGS"
+timeout 8 /usr/local/san/vsp/bin/cachestat "$ARGS"   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
+rm -f "$ARGS"
 ```

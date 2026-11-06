@@ -22,11 +22,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # the token is passed as a per-command header (git -c) and is never
-          # written to the URL, to .git/config or to a credential store
-          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-          git -c "http.extraheader=AUTHORIZATION: basic $AUTH" clone \
-            "https://github.com/${{ github.repository }}.wiki.git" /tmp/wiki
+          # the token reaches git only through its configuration environment
+          # (GIT_CONFIG_*): never on a command line, in the URL, in .git/config
+          # or in a credential store
+          GIT_CONFIG_COUNT=1
+          GIT_CONFIG_KEY_0=http.extraheader
+          GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
+          git clone "https://github.com/${{ github.repository }}.wiki.git" /tmp/wiki
 
       - name: Sync pages
         env:
@@ -39,5 +42,8 @@ jobs:
           git add -A
           git diff --cached --quiet && { echo "wiki unchanged"; exit 0; }
           git commit -m "Sync wiki from ${{ github.sha }}"
-          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-          git -c "http.extraheader=AUTHORIZATION: basic $AUTH" push
+          GIT_CONFIG_COUNT=1
+          GIT_CONFIG_KEY_0=http.extraheader
+          GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          export GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
+          git push
