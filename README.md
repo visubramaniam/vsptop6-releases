@@ -10,27 +10,29 @@ source repository is private; this repository holds only the packaged releases.
 
 ## Install
 
-RHEL / Rocky / Alma 9, x86_64. The host needs Hitachi **Command Control Interface** (CCI /
-RAID Manager, `/HORCM`) and the **RAID Manager Library** (`/usr/lib64/libsvrrm.so`) installed
-first; the package checks for both and refuses to install without them.
+RHEL / Rocky / Alma 9, x86_64. The host needs the Hitachi **RAID Manager Library**
+(`/usr/lib64/libsvrrm.so`) installed first; the package checks for it and refuses to install
+without it. Hitachi **Command Control Interface** (CCI / `raidcom`) is optional since 3.0: when
+present it adds host-group names longer than 16 characters and NVMe subsystem ids to the
+topology; everything else comes from RMLIB over the command device.
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v2.0.1/vsptop6-2.0.1-1.el9.x86_64.rpm   # or the latest on the Releases page
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v3.0.1/vsptop6-3.0.1-1.el9.x86_64.rpm   # or the latest on the Releases page
 ```
 
 `dnf` pulls in `ncurses-libs` and `sqlite-libs`. Then:
 
 ```sh
-vi /usr/local/san/vsp/conf/vsptop.conf     # arrays, RMLIB user/password (same on every array), command devices, thresholds
-genarrayhash                               # builds the topology database (also hourly via cron)
-vsptop                                     # top-like table
+vi /usr/local/san/vsp/conf/vsptop.conf     # arrays, RMLIB user/password, command devices, thresholds
+vsptop                                     # top-like table; builds the topology from RMLIB on first start, refreshes it hourly
 vspdash                                    # the same monitor as a dashboard (UTF-8, 256-colour terminal)
 ```
 
-Upgrading from 1.x: copy the new `[THRESHOLD]` block from `vsptop.conf.example` into your
-`vsptop.conf` (two-level warning/problem thresholds, no IOPS/MB/s thresholds) and run
-`genarrayhash` once after installing — 2.0 records attributes, SSID, virtual LDEV ids, resource
-groups, host modes, link speeds and pool capacity that older topology files lack.
+Upgrading from 2.x: `genarrayhash` and its cron job are gone — the first `vsptop` start
+rebuilds the topology from RMLIB (`vsptop -T -v` does it by hand). New in `vsptop.conf`:
+`[HORCM] USE=auto|yes|no` (whether to use `raidcom` when present), `[GENERAL] TOPOREFRESH=60`
+(minutes between refreshes) and `[LNKSPD]` (per-port speed overrides, normally empty). Copy
+them from `vsptop.conf.example`. Upgrading from 1.x: also copy the `[THRESHOLD]` block.
 
 Only one `vsptop`/`vspdash` runs per host (a second start is refused), and the refresh interval
 is floored by the array's LDEV count, so a monitor cannot overload the array's controllers.
