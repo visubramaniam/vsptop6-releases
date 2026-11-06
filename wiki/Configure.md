@@ -3,11 +3,13 @@
 Three things to set up, in this order:
 
 1. an **array user account** the tools log in with,
-2. a **HORCM instance** so `raidcom` (used by `genarrayhash`) can reach every array,
-3. **`vsptop.conf`**, read by both `genarrayhash` and `vsptop`.
+2. **`vsptop.conf`**, read by `vsptop` and `vspdash`,
+3. optionally a **HORCM instance** so `raidcom` can reach every array — only with CCI installed,
+   and only for host-group names longer than 16 characters and NVMe subsystem ids; everything
+   else comes from RMLIB through the command device, with no daemon.
 
 Throughout, the examples use two arrays, serial `970272` on `/dev/sdb` and `970249` on
-`/dev/sdc` (from `inqraid`, see [Install](Install) step 1).
+`/dev/sdc` (see [Install](Install) step 1 for finding the command devices).
 
 ## 1. Array user account
 
@@ -21,17 +23,18 @@ Users can only be created in the array's own management interface:
   user in a group that has the view-only role.
 
 `raidcom` cannot create users, and Ops Center only manages its own accounts. The same array
-account is then used for the `raidcom -login` that `genarrayhash` performs and for the RMLIB
-login the collectors perform.
+account is then used for the RMLIB login the collectors perform and, when `raidcom` is
+installed, for the `raidcom -login` that the topology refresh performs.
 
-> **Monitoring several arrays: create the same user name and password on every array.**
-> `genarrayhash` drives all arrays through one HORCM instance, and `raidcom -login` is
-> per instance, not per array: `raidcom -login <user> <pass> -IH0` logs in to every array
-> the instance knows in one go, while logging in to each array separately with `-s <serial>`
-> does not work. `genarrayhash` therefore logs in once with the credentials of the **first**
-> array in `vsptop.conf` and warns if any other array lists different ones. (The collectors
-> attach to each command device individually, so they could use different accounts, but
-> keeping one account everywhere is the only configuration that works for `genarrayhash`.)
+> **Monitoring several arrays with `raidcom` enrichment: create the same user name and
+> password on every array.** The collectors (including `topostat`) attach to each command
+> device individually, so RMLIB alone works with different accounts per array. The optional
+> `raidcom` enrichment does not: `raidcom -login` is per HORCM instance, not per array —
+> `raidcom -login <user> <pass> -IH0` logs in to every array the instance knows in one go,
+> while logging in to each array separately with `-s <serial>` does not work. The refresh
+> therefore logs in with the credentials of the array being refreshed and the login applies
+> to all of them, so with different accounts only the last login wins. Either keep one
+> account everywhere or set `[HORCM] USE=no`.
 
 > **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
 > `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
@@ -39,17 +42,19 @@ login the collectors perform.
 > as typed (the original Hitachi collectors used to lower-case them; vsptop6 removed that).
 > The user name follows the same character rules.
 
-Test it from the host once the HORCM instance below is running:
+Test it from the host: put the account in `vsptop.conf` (section 3) and run `vsptop -T -v`;
+a wrong user name or password shows as `topostat exited with status 2`. With CCI installed and
+the HORCM instance from section 2 running, `raidcom -login vsptop vsptop2026 -IH0 && echo
+login ok` tests the same account for the enrichment.
 
-```sh
-/HORCM/usr/bin/raidcom -login vsptop vsptop2026 -IH0 && echo login ok     # logs in to every array in instance 0
-```
+## 2. HORCM instance (`/etc/horcm0.conf`) — only with CCI
 
-## 2. HORCM instance (`/etc/horcm0.conf`)
-
-`raidcom` works through a HORCM daemon. vsptop6 expects **one instance that knows all the
-arrays**; `genarrayhash` logs in to the instance once (`raidcom -login … -IH<n>`) and then
-runs `raidcom get … -IH<n> -s <serial>` per array. Instance `0` is the default
+`raidcom` works through a HORCM daemon. This section is optional and needs CCI installed ([Install](Install) section 3): without CCI (or with
+`[HORCM] USE=no`) the topology is complete except that host-group names are cut at 16
+characters (the RMLIB limit) and NVMe subsystems are numbered by position instead of by
+their subsystem id. With it, vsptop6 expects **one instance that knows all the arrays**; each
+topology refresh logs in (`raidcom -login … -IH<n>`) and runs `raidcom get host_grp -key
+host_grp` per port and `raidcom get nvm_subsystem` with `-IH<n> -s <serial>`. Instance `0` is the default
 (`[HORCM] INST=0` in `vsptop.conf`).
 
 Create `/etc/horcm0.conf`:
@@ -115,7 +120,7 @@ If you must use a different instance number, set `[HORCM] INST=` in `vsptop.conf
 ## 3. `vsptop.conf`
 
 Location: `/usr/local/san/vsp/conf/vsptop.conf` (created from the example by the RPM; keep
-it mode `600` — it contains the array password). `vsptop` and `genarrayhash` find it
+it mode `600` — it contains the array password). `vsptop` and `vspdash` find it
 automatically; `-c <path>` or `VSPTOP_CONF=<path>` overrides.
 
 ```ini
@@ -129,7 +134,7 @@ automatically; `-c <path>` or `VSPTOP_CONF=<path>` overrides.
 unit=0                  # index; keep them unique and in order
 user=vsptop             # array user
 pass=vsptop2026         # see section 1: no shell special characters
-cmd=/dev/sdb            # command device on THIS host (inqraid), used by the collectors
+cmd=/dev/sdb            # command device on THIS host (lsblk MODEL OPEN-V-CM / inqraid), used by the collectors
 
 [970249]
 unit=1
@@ -140,6 +145,7 @@ cmd=/dev/sdc
 # ---- highlighting ------------------------------------------------------------
 [THRESHOLD]
 highlight=red           # rows over a threshold: red (default) | amber | green | underline | bold | reverse | dim
+theme=auto              # auto (terminal colours, default) | dark (black background) | light (white background); d toggles
 responsewarn=2000       # response time, microseconds: LDEV r/w RT, host-group max RT, port r/w RT
 responsealert=5000      #   2-5 ms is a warning (amber), above 5 ms a problem (red)
 activeiops=100          #   ...and only when read or write IOPS exceed this: idle volumes report noisy response times
@@ -153,6 +159,14 @@ linkalert=60
 [HORCM]
 BASE=/HORCM             # where CCI is installed (raidcom is BASE/usr/bin/raidcom)
 INST=0                  # the HORCM instance from section 2
+USE=auto                # auto: enrich the topology with raidcom if BASE/usr/bin/raidcom exists; yes | no
+
+# ---- port link speed overrides (Gbps) ---------------------------------------
+[LNKSPD]
+# Normally empty: the negotiated speed comes from RMLIB. Only for a
+# port that still shows AUTO (link down at refresh time, or an array that does not
+# report it) list the speed here; it feeds the link utilisation columns.
+#CL1-A=32
 
 [RMLIB]
 INST=831                # base RMLIB instance number; each collector uses 831..837
@@ -165,7 +179,8 @@ INST=831                # base RMLIB instance number; each collector uses 831..8
 #BIN_DIR=/usr/local/san/vsp/bin
 #DB=/usr/local/san/vsp/var/topology.db
 REFRESH=5               # seconds between samples; keys 1-9 and 0 change it live  (floored by LDEV count: <=1000 LDEVs 5 s, <=10000 15 s, more 30 s — cannot be lowered)
-DRILLDOWN=0             # 1: use ldevstat/portstat for views of <= 8 LDEVs/ports
+DRILLDOWN=0             # 1: sample only the LDEVs/ports in view when there are <= 64
+TOPOREFRESH=60          # minutes between topology refreshes (topostat, in the background); 0 = only at startup / -T
 ```
 
 Field by field:
@@ -174,25 +189,33 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (no shell special characters). **Must be the same for every array** — `genarrayhash` logs in to the HORCM instance once with the first array's credentials |
+| `user` / `pass` | the array account from section 1 (no shell special characters). Must be the same for every array if `raidcom` enrichment is used (`raidcom -login` is per HORCM instance) |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
+| `theme` | `auto` (default): the terminal's own background with the dark palette; `dark`: paint the background black; `light`: paint it white with a palette of darker shades (for light terminals or printing). The `d` key toggles dark/light while running |
 | `responsewarn` / `responsealert`, `mpbwarn` / `mpbalert`, `linkwarn` / `linkalert` | warning (amber) and problem (red) levels for response time (LDEVs, host groups, ports — judged only while read or write IOPS exceed `activeiops`, default 100), MP busy % and port link utilisation; `?` in vsptop shows them. `ldevresponse` and `mpbbusy` from older files are read as the problem level; `portiops` / `portmbps` are ignored |
 | `[HORCM] BASE`, `INST` | where `raidcom` is and which instance holds the command devices |
+| `[HORCM] USE` | `auto` (default): use `raidcom` for full host-group names and NVMe subsystem ids when `BASE/usr/bin/raidcom` exists; `yes` forces it (errors are reported); `no` never runs `raidcom` |
+| `[LNKSPD] CLn-X=Gbps` | overrides the port speed RMLIB reports for the link utilisation columns; normally not needed since the negotiated speed is read from RMLIB |
 | `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–837 collide with other RMLIB clients on the host |
 | `REFRESH` | sampling interval in seconds |
-| `DRILLDOWN` | 1 enables the original per-item collectors for small views; 0 (default) uses the array-wide collectors everywhere |
+| `DRILLDOWN` | 1 scopes the LDEV and port collectors (`ids=`) to the objects in view when there are 64 or fewer; 0 (default) samples the whole array everywhere |
+| `TOPOREFRESH` | minutes after which an array's topology is rebuilt in the background while `vsptop` runs (default 60; 0 disables periodic refresh) |
 
 Sections the old Perl version used (`[BACKEND]`, `[HTNM]`) are ignored.
 
 ## 4. Build the topology database
 
-`genarrayhash` turns `raidcom` output into `topology.db` (LDEV ↔ host group ↔ port ↔ MPB ↔
-pool, port roles/types, emulation). Dry-run it first to see what it finds:
+`vsptop` builds `topology.db` itself: on the first start (or whenever an array has no
+topology, or one older than `TOPOREFRESH` minutes) it runs the `topostat` collector for that
+array, which reads LDEV ↔ host group ↔ port ↔ MPB ↔ pool, port types/roles/speeds, emulation,
+attributes, resource groups and pool usage straight from RMLIB. Later refreshes happen in
+the background while the screens keep running. To build or check it by hand:
 
 ```sh
-genarrayhash -n -v | head -40        # -n: print edges, write nothing; -v: show each raidcom call
-genarrayhash -n | awk -F'\t' '{print $1, $2}' | sort | uniq -c
+vsptop -T -v                 # rebuild every array and exit; -v shows each step
+vsptop -T -s 970272          # one array only
+/usr/local/san/vsp/bin/topostat /tmp/args | awk -F'\t' '{print $1, $2}' | sort | uniq -c   # raw edges (args file as in section 5)
 ```
 
 You should see `HG_LDEV`, `PORT_HG`, `LDEV_MPB`, `LDEV_POOL`, `PORT_ROLE`, `LDEV_EMUL` … for
@@ -200,18 +223,11 @@ each serial. Typical problems and what they mean:
 
 | Symptom | Cause |
 |---|---|
-| `(login returned non-zero; continuing)` then no edges | wrong user/password (the first array's are used for the whole instance) |
-| `warning: <serial> has different credentials from <serial>` | arrays in `vsptop.conf` don't share one account; create the same user/password on each array |
-| no edges for one serial only | that serial isn't in `horcm0.conf`, or its account differs from the first array's |
-| edges only for one array | second `HORCM_CMD` line missing or HORCM not restarted after editing it |
-| `raidcom: command device … not found` | `cmd=` or `HORCM_CMD` names a device that moved after a reboot — re-run `inqraid` |
-
-Then write the database and keep it fresh:
-
-```sh
-genarrayhash                                   # writes /usr/local/san/vsp/var/topology.db
-cat /etc/cron.d/vsptop6                        # installed by the RPM: hourly refresh
-```
+| `topostat … exited with status 2` and no edges | wrong `user`/`pass` or `cmd` for that serial (RMLIB login failed) |
+| `raidcom: … login` warnings, edges still stored | the enrichment login failed: arrays don't share one account, or `[HORCM] INST` is wrong; set `USE=no` to silence it |
+| host-group names cut at 16 characters, NVMSSID shows 0,1,2… | `raidcom` not installed or `USE=no` — the RMLIB limit; install CCI or live with it |
+| `LNKSPD` shows `AUTO` and link utilisation `-` on a port | RMLIB reported no negotiated speed (link down when the topology was built, or not reported by that array): rebuild with `vsptop -T -s <serial>` once the link is up, or add the port to `[LNKSPD]` |
+| `raidcom: command device … not found` | `cmd=` or `HORCM_CMD` names a device that moved after a reboot — re-run `lsblk` / `inqraid` |
 
 ## 5. Run
 
@@ -226,13 +242,12 @@ database is. `Enter` drills into an array; `?` lists the keys. If a screen stays
   check `user`/`pass` and `cmd` for that serial (password rules in section 1);
 - `Cache Summary … (waiting for cachestat)` for more than two refreshes → same check for
   `cachestat`;
-- the `TOPO AGE` column reads `none` → `genarrayhash` has not run for that serial.
+- the `TOPO AGE` column reads `none` → the topology build for that serial failed; run `vsptop -T -v -s <serial>` to see why.
 
 A quick standalone test of one collector, exactly as `vsptop` runs it:
 
 ```sh
-ARGS=$(mktemp)                                    # private 0600 file with an unpredictable name
-printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > "$ARGS"
-timeout 8 /usr/local/san/vsp/bin/cachestat "$ARGS"   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
-rm -f "$ARGS"
+printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args; chmod 600 /tmp/args
+timeout 8 /usr/local/san/vsp/bin/cachestat /tmp/args   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
+rm -f /tmp/args
 ```
