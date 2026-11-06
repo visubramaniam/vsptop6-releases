@@ -30,7 +30,7 @@ vspdash                                    # the same monitor as a dashboard (UT
 
 Upgrading from 2.x: `genarrayhash` and its cron job are gone — the first `vsptop` start
 rebuilds the topology from RMLIB (`vsptop -T -v` does it by hand). New in `vsptop.conf`:
-`[HORCM] USE=auto|yes|no` (whether to use `raidcom` when present), `[GENERAL] TOPOREFRESH=60`
+`[HORCM] USE=auto|yes|no` (whether to use `raidcom` when present; arrays may use different accounts), `[GENERAL] TOPOREFRESH=60`
 (minutes between refreshes) and `[LNKSPD]` (per-port speed overrides, normally empty). Copy
 them from `vsptop.conf.example`. Upgrading from 1.x: also copy the `[THRESHOLD]` block.
 

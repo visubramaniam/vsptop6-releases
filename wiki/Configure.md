@@ -26,15 +26,13 @@ Users can only be created in the array's own management interface:
 account is then used for the RMLIB login the collectors perform and, when `raidcom` is
 installed, for the `raidcom -login` that the topology refresh performs.
 
-> **Monitoring several arrays with `raidcom` enrichment: create the same user name and
-> password on every array.** The collectors (including `topostat`) attach to each command
-> device individually, so RMLIB alone works with different accounts per array. The optional
-> `raidcom` enrichment does not: `raidcom -login` is per HORCM instance, not per array —
-> `raidcom -login <user> <pass> -IH0` logs in to every array the instance knows in one go,
-> while logging in to each array separately with `-s <serial>` does not work. The refresh
-> therefore logs in with the credentials of the array being refreshed and the login applies
-> to all of them, so with different accounts only the last login wins. Either keep one
-> account everywhere or set `[HORCM] USE=no`.
+> **Several arrays may use different accounts.** The collectors (including `topostat`)
+> attach to each command device with that array's `user`/`pass`. The optional `raidcom`
+> enrichment runs `raidcom -login` without arguments and answers its `User for
+> Serial#[N] :` / `Password :` prompts, one pair per array the HORCM instance knows, with
+> that serial's credentials from `vsptop.conf` — so the password is never on a command line
+> and no array has to share an account. An array in `horcm0.conf` that is not in
+> `vsptop.conf` is answered with the first array's account (and its login simply fails).
 
 > **Password rules.** No shell special characters — `#` `!` `?` `|` `$` `*` `[` `]` `\` `{`
 > `}` `` ` `` `"` `'` `&` or spaces; use letters, digits and `; : . + - % @` instead.
@@ -44,8 +42,8 @@ installed, for the `raidcom -login` that the topology refresh performs.
 
 Test it from the host: put the account in `vsptop.conf` (section 3) and run `vsptop -T -v`;
 a wrong user name or password shows as `topostat exited with status 2`. With CCI installed and
-the HORCM instance from section 2 running, `raidcom -login vsptop vsptop2026 -IH0 && echo
-login ok` tests the same account for the enrichment.
+the HORCM instance from section 2 running, `vsptop -T -v` also prints `raidcom -login -IH0: ok`
+(or `failed`) for the enrichment login.
 
 ## 2. HORCM instance (`/etc/horcm0.conf`) — only with CCI
 
@@ -53,8 +51,8 @@ login ok` tests the same account for the enrichment.
 `[HORCM] USE=no`) the topology is complete except that host-group names are cut at 16
 characters (the RMLIB limit) and NVMe subsystems are numbered by position instead of by
 their subsystem id. With it, vsptop6 expects **one instance that knows all the arrays**; each
-topology refresh logs in (`raidcom -login … -IH<n>`) and runs `raidcom get host_grp -key
-host_grp` per port and `raidcom get nvm_subsystem` with `-IH<n> -s <serial>`. Instance `0` is the default
+topology refresh logs in (`raidcom -login -IH<n>`, answering the prompts per serial) and runs
+`raidcom get host_grp -key host_grp` per port and `raidcom get nvm_subsystem` with `-IH<n> -s <serial>`. Instance `0` is the default
 (`[HORCM] INST=0` in `vsptop.conf`).
 
 Create `/etc/horcm0.conf`:
@@ -189,7 +187,7 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (no shell special characters). Must be the same for every array if `raidcom` enrichment is used (`raidcom -login` is per HORCM instance) |
+| `user` / `pass` | the array account from section 1 (no shell special characters). May differ per array |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
 | `theme` | `auto` (default): the terminal's own background with the dark palette; `dark`: paint the background black; `light`: paint it white with a palette of darker shades (for light terminals or printing). The `d` key toggles dark/light while running |
@@ -247,7 +245,7 @@ database is. `Enter` drills into an array; `?` lists the keys. If a screen stays
 A quick standalone test of one collector, exactly as `vsptop` runs it:
 
 ```sh
-printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args; chmod 600 /tmp/args
+(umask 077; printf '970272 vsptop vsptop2026 831 /dev/sdb\n' > /tmp/args)   # created mode 600, never world-readable
 timeout 8 /usr/local/san/vsp/bin/cachestat /tmp/args   # expect lines: CLPR0,<size MB>,<used %>,<wp %>,<sf>
 rm -f /tmp/args
 ```
