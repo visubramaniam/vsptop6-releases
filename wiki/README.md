@@ -6,9 +6,10 @@
 # 1. prerequisite on the host: the Hitachi RAID Manager Library (/usr/lib64/libsvrrm.so)
 #    (CCI / raidcom is optional: full-length host-group names and NVMe subsystem ids)
 # 2. install
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v3.0.1/vsptop6-3.0.1-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.0/vsptop6-4.0.0-1.el9.x86_64.rpm
 # 3. configure: arrays, array user/password (see Configure for password rules), command devices
 vi /usr/local/san/vsp/conf/vsptop.conf
+vsptop -P              # optional: encrypt the passwords you just typed (pass=enc:...)
 # 4. run: the first start builds the topology from RMLIB (vsptop -T -v does it by hand and shows each step)
 vsptop                 # top-like table
 vspdash                # the same monitor as a btop-style dashboard
@@ -17,7 +18,8 @@ vspdash                # the same monitor as a btop-style dashboard
 ## What gets installed
 
 ```
-/usr/local/san/vsp/bin/     vsptop, vspdash, the collectors (allldevstat, allportstat, allmpinfo, cachestat, topostat)
+/usr/local/san/vsp/bin/     vsptop, vspdash, the collectors (allldevstat, allportstat, allmpinfo, cachestat, loginstat, topostat)
+/usr/local/san/vsp/conf/.key  created by vsptop -P: the host-bound key for pass=enc: (mode 0400)
 /usr/local/san/vsp/conf/    vsptop.conf, vsptop.conf.example
 /usr/local/san/vsp/var/     topology.db (built and refreshed by vsptop itself)
 /usr/local/san/vsp/doc/     this documentation
@@ -42,9 +44,9 @@ port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
 
 | Key | Action |
 |---|---|
-| `Enter` | drill into the selected row: array → LDEVs, LDEV → its host groups, host group → its LDEVs, MP blade → its LDEVs, port → its host groups |
-| `l` `h` `m` `p` | LDEVs / host groups / MP blades / ports **related to the selected row** |
-| `L` `H` `M` `P` | all LDEVs / host groups / MP blades / ports of the array |
+| `Enter` | drill into the selected row: array → LDEVs, LDEV → its host groups, host group → its LDEVs, MP blade → its LDEVs, port → its host groups, initiator → the LDEVs behind it |
+| `l` `h` `m` `p` `i` | LDEVs / host groups / MP blades / ports / initiators **related to the selected row** |
+| `L` `H` `M` `P` `I` | all LDEVs / host groups / MP blades / ports / initiators of the array |
 | `a` | arrays screen |
 | `Esc`, `Backspace`, `←` | back |
 | `s` / `S` | sort by the next / previous column (metrics descend, names ascend) |
@@ -58,17 +60,33 @@ port rows, 8-colour terminals a reduced palette, non-UTF-8 locales ASCII graphs.
 
 The line above the footer spells out the abbreviations in the cursor row's ATTR (LDEV, MPB screens) or ROLE (port screen) column, e.g. `ATTR: GAD = global-active device, HDP = Dynamic Provisioning`.
 
-Only one `vsptop`/`vspdash` runs per host: a second start is refused with a message naming the running one. Together with the refresh floor this keeps a monitor from overloading the array's controllers (see [Security](Security)).
 | `q` | quit |
 
+Only one `vsptop`/`vspdash` runs per host: a second start is refused with a message naming the running one. Together with the refresh floor this keeps a monitor from overloading the array's controllers (see [Security](Security)).
+
 Rows at a threshold's warning level (`[THRESHOLD]` in `vsptop.conf`: response time 2–5 ms, MP busy or link utilisation 50–60 %) are amber, at the problem level (above 5 ms / 60 %) red; `highlight=` changes the problem colour (amber, green, underline, bold, reverse, dim).
+
+## INITIATORS (4.0)
+
+`i` / `I` open the initiators screen: one row per registered initiator per port — FC WWN,
+iSCSI IQN or NVMe host NQN — with its nickname, `LOGIN` (Y/N, live on FC ports), the port,
+its target (host group, iSCSI target or NVMe subsystem) and the LDEVs behind it, plus one
+amber row for every FC login that is registered in no host group on its port. The screen is
+therefore also a zoning / registration audit: "logged in but not registered" and "registered
+but never logged in" are both visible at a glance. Logins come from RMLIB; registrations come
+from `raidcom` (`get hba_wwn` / `get hba_iscsi` / `get host_nqn`) during the topology refresh,
+so without CCI the screen shows only the logins. The array reports iSCSI logins under internal
+ids and NVMe hosts are not in the login table, so IQN and NQN rows show `LOGIN -`. Related columns elsewhere: `nWWN` on the ports
+screen (initiators logged in now), `WWNS` on the host-group screen (registered initiators),
+and `NAA_ID` on the LDEV screen (last column — `/` searches it, so a host-side
+`naa.60060e80…` finds its LDEV).
 
 ## Command-line options
 
 ```
 vsptop  [-c vsptop.conf] [-s serial[:screen[:scope:key]]] [-D] [-t ticks]
    -s 970272                 start on that array's LDEV screen
-   -s 970272:ports           start on its port screen (ldevs | hgs | mpbs | ports)
+   -s 970272:ports           start on its port screen (ldevs | hgs | mpbs | ports | inits)
    -s 970272:ldevs:hg:esx01  start scoped to a host group (hg | ldev | mpb | port)
    -D                        print the screen as text instead of curses (scripts, ssh without a tty)
    -t N                      exit after N refreshes (with -D)
@@ -76,7 +94,16 @@ vsptop  [-c vsptop.conf] [-s serial[:screen[:scope:key]]] [-D] [-t ticks]
 vsptop  -T [-s serial] [-v]  rebuild the topology database (all arrays, or one) and exit
    -v   show each step: topostat, the optional raidcom enrichment, edges stored
    (the same rebuild happens automatically at start and every TOPOREFRESH minutes while running)
+
+vsptop  -P [-s serial]       encrypt the passwords in vsptop.conf (pass=enc:...), creating conf/.key on first use
+   -s 970272                 prompt (twice, no echo) for a new password for that array and store it encrypted
+
+vsptop  -V                   print the version and whether a newer release exists (waits up to 6 s)
 ```
+
+At start `vsptop` and `vspdash` look once for a newer release and show `new: x.y.z` at the right
+edge of the footer when there is one; `[GENERAL] VERSIONCHECK=0` in `vsptop.conf` turns that off
+([Configure](Configure) section 3).
 
 ## Troubleshooting
 
@@ -89,3 +116,7 @@ vsptop  -T [-s serial] [-v]  rebuild the topology database (all arrays, or one) 
 | install fails with "RAID Manager Library … not found" | install the RAID Manager Library first ([Install](Install)); CCI is optional |
 | host-group names end after 16 characters, `NVMSSID` shows 0, 1, 2… | RMLIB's limit; install CCI (`raidcom`) and the next refresh fills in the full names and subsystem ids ([Configure](Configure) section 2) |
 | `LNKSPD` shows `AUTO` on a port | the link was down when the topology was built, or the array did not report it: `vsptop -T -s <serial>` once the link is up, or set it in `[LNKSPD]` |
+| INITIATORS shows only amber rows / `WWNS` is 0 | registrations need CCI: install `raidcom` and configure the HORCM instance ([Configure](Configure) section 2); the next topology refresh fills them in |
+| `LOGIN` is `-` for an IQN or NQN | the array reports iSCSI logins under internal ids and NVMe hosts are not in the login table; FC logins are matched by WWN |
+| `vsptop.conf: ... key is missing` | the conf holds `pass=enc:` values but `conf/.key` is gone (new host, restored conf): run `vsptop -P -s <serial>` for each array and re-enter the passwords ([Configure](Configure) section 3a) |
+| no `new: x.y.z` ever appears | either you are on the latest release or the host has no outbound HTTPS / no `curl` (the check fails silently; `vsptop -V` then prints just the version). `VERSIONCHECK=0` turns the check off on such hosts |

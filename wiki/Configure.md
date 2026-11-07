@@ -53,7 +53,7 @@ the HORCM instance from section 2 running, `vsptop -T -v` also prints `raidcom -
 characters (the RMLIB limit) and NVMe subsystems are numbered by position instead of by
 their subsystem id. With it, vsptop6 expects **one instance that knows all the arrays**; each
 topology refresh logs in (`raidcom -login -IH<n>`, answering the prompts per serial) and runs
-`raidcom get host_grp -key host_grp` per port and `raidcom get nvm_subsystem` with `-IH<n> -s <serial>`. Instance `0` is the default
+`raidcom get host_grp -key host_grp` per port, `raidcom get nvm_subsystem`, and (4.0) `raidcom get hba_wwn` / `get hba_iscsi` per host group and `get host_nqn` per NVMe subsystem for the INITIATORS screen's registrations, all with `-IH<n> -s <serial>`. On an array with a few hundred host groups that is a few hundred `raidcom` calls per refresh, in the background. Instance `0` is the default
 (`[HORCM] INST=0` in `vsptop.conf`).
 
 Create `/etc/horcm0.conf`:
@@ -132,7 +132,7 @@ automatically; `-c <path>` or `VSPTOP_CONF=<path>` overrides.
 [970272]
 unit=0                  # index; keep them unique and in order
 user=vsptop             # array user
-pass=vsptop2026         # see section 1: no shell special characters
+pass=vsptop2026         # see section 1: no shell special characters; `vsptop -P` turns this into pass=enc:... (section 3a)
 cmd=/dev/sdb            # command device on THIS host (lsblk MODEL OPEN-V-CM / inqraid), used by the collectors
 
 [970249]
@@ -168,7 +168,7 @@ USE=auto                # auto: enrich the topology with raidcom if BASE/usr/bin
 #CL1-A=32
 
 [RMLIB]
-INST=831                # base RMLIB instance number; each collector uses 831..837
+INST=831                # base RMLIB instance number; the collectors use 831..838, topostat 839
 
 # ---- paths and behaviour ----------------------------------------------------
 [GENERAL]
@@ -180,6 +180,7 @@ INST=831                # base RMLIB instance number; each collector uses 831..8
 REFRESH=5               # seconds between samples; keys 1-9 and 0 change it live  (floored by LDEV count: <=1000 LDEVs 5 s, <=10000 15 s, more 30 s — cannot be lowered)
 DRILLDOWN=0             # 1: sample only the LDEVs/ports in view when there are <= 64
 TOPOREFRESH=60          # minutes between topology refreshes (topostat, in the background); 0 = only at startup / -T
+VERSIONCHECK=1          # 1: look for a newer release once at start (footer shows new: x.y.z); 0: never
 ```
 
 Field by field:
@@ -188,7 +189,7 @@ Field by field:
 |---|---|
 | `[ARRAYS] serial=name` | every array to monitor; the name is what the screens show |
 | `unit` | 0, 1, 2 … — an index used internally; any unique integers |
-| `user` / `pass` | the array account from section 1 (no shell special characters). May differ per array |
+| `user` / `pass` | the array account from section 1 (no shell special characters). May differ per array. `pass=enc:…` (written by `vsptop -P`) is the encrypted form, `pass=ask` prompts at start — section 3a |
 | `cmd` | the command device **for that serial, on this host**; it must match the `HORCM_CMD` line for the same serial |
 | `highlight` | how threshold breaches are drawn: `red` (default, reverse video), `amber`, `green`, `underline`, `bold`, `reverse`, `dim` |
 | `theme` | `auto` (default): the terminal's own background with the dark palette; `dark`: paint the background black; `light`: paint it white with a palette of darker shades (for light terminals or printing). The `d` key toggles dark/light while running |
@@ -196,12 +197,37 @@ Field by field:
 | `[HORCM] BASE`, `INST` | where `raidcom` is and which instance holds the command devices |
 | `[HORCM] USE` | `auto` (default): use `raidcom` for full host-group names and NVMe subsystem ids when `BASE/usr/bin/raidcom` exists; `yes` forces it (errors are reported); `no` never runs `raidcom` |
 | `[LNKSPD] CLn-X=Gbps` | overrides the port speed RMLIB reports for the link utilisation columns; normally not needed since the negotiated speed is read from RMLIB |
-| `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–837 collide with other RMLIB clients on the host |
+| `[RMLIB] INST` | base instance number handed to RMLIB; change only if 831–839 collide with other RMLIB clients on the host |
 | `REFRESH` | sampling interval in seconds |
 | `DRILLDOWN` | 1 scopes the LDEV and port collectors (`ids=`) to the objects in view when there are 64 or fewer; 0 (default) samples the whole array everywhere |
 | `TOPOREFRESH` | minutes after which an array's topology is rebuilt in the background while `vsptop` runs (default 60; 0 disables periodic refresh) |
+| `VERSIONCHECK` | 1 (default): once per start, ask the public releases page whether a newer release exists and show `new: x.y.z` at the right edge of the footer; 0: never. Runs `curl` in the background with a plain `vsptop6/<version>` user agent and nothing else; silent when offline. `-D` dump mode never checks; `vsptop -V` checks in the foreground |
 
 Sections the old Perl version used (`[BACKEND]`, `[HTNM]`) are ignored.
+
+## 3a. Passwords at rest
+
+`vsptop.conf` is root-only (`0600`), and that is the main protection. On top of it the
+passwords can be stored encrypted so that a copy of the file, a backup or a `grep` does not
+give them away:
+
+```sh
+vsptop -P                 # every plain pass= in the conf becomes pass=enc:...; nothing is prompted
+vsptop -P -s 970272       # prompt (twice, no echo) for a new password for one array and store it encrypted
+```
+
+- The key is 32 random bytes in `<confdir>/.key`, mode `0400`, created by the first `-P`.
+  It never leaves the host, so a conf copied elsewhere cannot be decrypted there: on the new
+  host run `vsptop -P -s <serial>` for each array (the "key is missing" message says so).
+  Keep the key out of backups that the conf is in, or the two together are as good as plain.
+- `pass=ask` stores nothing: `vsptop`, `vspdash` and `vsptop -T` prompt at start (before the
+  screens come up) and keep the answer in memory for the session, including the background
+  topology refreshes. Not usable from cron-style wrappers for that reason.
+- Plain `pass=` keeps working; `enc:`, `ask` and plain can be mixed per array.
+- The collectors still receive the password through their `0600` argument file under
+  `$XDG_RUNTIME_DIR` (removed when the collector exits), and `raidcom -login` through its
+  terminal prompts; neither form ever puts it on a command line.
+- This is protection at rest, not against root on the host: root can read `.key`.
 
 ## 4. Build the topology database
 
