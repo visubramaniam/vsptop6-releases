@@ -95,11 +95,11 @@ From the GitHub release (the `.el9` RPM works on RHEL/Rocky/Alma 9):
 dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v3.0.1/vsptop6-3.0.1-1.el9.x86_64.rpm
 ```
 
-`dnf` fetches `ncurses-libs` and `sqlite-libs` from the OS repositories, runs the
+`dnf` fetches `ncurses-libs`, `sqlite-libs` and `openssl-libs` from the OS repositories, runs the
 prerequisite check and installs:
 
 ```
-/usr/local/san/vsp/bin/        vsptop, vspdash, the collectors (incl. topostat)
+/usr/local/san/vsp/bin/        vsptop, vspdash, the collectors (incl. topostat and loginstat)
 /usr/local/san/vsp/conf/       vsptop.conf (created from vsptop.conf.example on first install)
 /usr/local/san/vsp/var/        topology.db (written by vsptop from topostat)
 /usr/local/san/vsp/doc/        README, methodology
@@ -116,7 +116,7 @@ Install RMLIB (section 2) and run `dnf install` again. A note that `/HORCM/usr/b
 is not installed is informational (section 3).
 
 Building from source instead: see the README (`make`, `make collectors`, `make install`) —
-the same prerequisites apply, plus `ncurses-devel` and `sqlite-devel`.
+the same prerequisites apply, plus `ncurses-devel`, `sqlite-devel` and `openssl-devel`.
 
 ## 5. Next
 

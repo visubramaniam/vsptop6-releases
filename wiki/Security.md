@@ -3,14 +3,21 @@
 ## What vsptop6 can do to an array
 
 Nothing. Every call it makes is a read: RAID Manager Library `getrminfo()` for configuration
-records and performance counters and, only when CCI is installed, `raidcom get host_grp` and
-`raidcom get nvm_subsystem`. It never calls `setrminfo()` or any `raidcom add/modify/delete`. The array account it uses should therefore be **view-only**
+records, port login tables and performance counters and, only when CCI is installed,
+`raidcom get host_grp`, `get nvm_subsystem`, `get hba_wwn`, `get hba_iscsi` and
+`get host_nqn`. It never calls `setrminfo()` or any `raidcom add/modify/delete`. The array account it uses should therefore be **view-only**
 (*Storage Administrator (View Only)*); it does not need, and should not have, any other role.
 
 ## Credentials
 
 - The array user name and password are stored once, in `/usr/local/san/vsp/conf/vsptop.conf`.
   The package creates that file with mode `600`, owner `root`; keep it that way.
+- **Passwords at rest (3.1):** `vsptop -P` rewrites every plain `pass=` as `pass=enc:…`,
+  AES-256-GCM under a 32-byte random key in `conf/.key` (mode `0400`, root) that never leaves
+  the host — a copy of the conf, a backup or a `grep` no longer gives the passwords away, and
+  a conf moved to another host cannot be decrypted there (`vsptop -P -s <serial>` re-enters
+  them). `pass=ask` stores nothing and prompts at start. This protects the file at rest, not
+  against root on the host, who can read the key; keep `.key` out of the backups the conf is in.
 - Use a **dedicated account** with a long password rather than an administrator's.
 - **Password characters:** do not use shell special characters — `#` `!` `?` `|` `$` `*`
   `[` `]` `\` `{` `}` `` ` `` `"` `'` `&` or spaces. Use letters, digits and `; : . + - % @`
@@ -42,11 +49,19 @@ can still share one session (`tmux`/`screen`), or run from different hosts.
 - Reading a command device requires access to the raw block device, which normally means
   `root`. `vsptop` and `vspdash` (and the collectors they start) run as root for that reason.
   There is no cron job and no daemon of vsptop6's own.
-- The tools open no network ports and make no outbound connections: RMLIB talks to the array
-  over the command device (in-band) only. If CCI is used, `raidcom` talks to the local HORCM
-  daemon over `localhost`, and HORCM to the array over the same command device.
+- The tools open no network ports. RMLIB talks to the array over the command device
+  (in-band) only; if CCI is used, `raidcom` talks to the local HORCM daemon over `localhost`,
+  and HORCM to the array over the same command device.
+- **One outbound request (3.1):** once per start, `vsptop`/`vspdash` run `curl` against
+  `https://github.com/visubramaniam/vsptop6-releases/releases/latest` to learn the newest
+  release tag and show `new: x.y.z` in the footer. The request carries nothing but a
+  `vsptop6/<version>` user agent — no serials, host name or configuration — and the answer is
+  only compared, never executed or installed. It is capped at 5 s, silent when offline, skipped
+  in `-D` dump mode, and `[GENERAL] VERSIONCHECK=0` disables it for hosts without outbound
+  access or where any outbound traffic is unwanted.
 - The topology database (`/usr/local/san/vsp/var/topology.db`, directory mode `700`) contains
-  LDEV ids, host-group names, port and pool ids — configuration metadata, no credentials and no
+  LDEV ids, host-group names, port and pool ids and, since 4.0, the initiator WWNs / IQNs / NQNs
+  registered on the array and their nicknames — configuration metadata, no credentials and no
   host data.
 
 ## Package
@@ -80,6 +95,9 @@ Design choices that follow from this:
 - Every memory allocation is checked; the sanitizer run has no findings.
 - The original Hitachi collector programs are no longer built or shipped; every collector in
   the package is vsptop6 code and goes through the same gates.
+- Password encryption uses the system OpenSSL (`libcrypto`, AES-256-GCM with a random nonce
+  per value), not home-grown cryptography; a tampered or foreign-key value fails to decrypt
+  rather than yielding garbage.
 
 GitHub's own code scanning (CodeQL) is not used because it requires GitHub Advanced Security
 on a private repository.

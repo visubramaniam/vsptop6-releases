@@ -17,16 +17,25 @@ present it adds host-group names longer than 16 characters and NVMe subsystem id
 topology; everything else comes from RMLIB over the command device.
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v3.0.1/vsptop6-3.0.1-1.el9.x86_64.rpm   # or the latest on the Releases page
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.0/vsptop6-4.0.0-1.el9.x86_64.rpm   # or the latest on the Releases page
 ```
 
-`dnf` pulls in `ncurses-libs` and `sqlite-libs`. Then:
+`dnf` pulls in `ncurses-libs`, `sqlite-libs` and `openssl-libs`. Then:
 
 ```sh
 vi /usr/local/san/vsp/conf/vsptop.conf     # arrays, RMLIB user/password, command devices, thresholds
+vsptop -P                                  # optional: encrypt the passwords in vsptop.conf (host-bound key)
 vsptop                                     # top-like table; builds the topology from RMLIB on first start, refreshes it hourly
 vspdash                                    # the same monitor as a dashboard (UTF-8, 256-colour terminal)
 ```
+
+New in 4.0: the **INITIATORS** screen (`i`/`I`) — every registered FC WWN / iSCSI IQN / NVMe
+host NQN per port with its live login state, target and LDEVs, plus logins that are registered
+nowhere; `nWWN` on the ports screen, `WWNS` on the host-group screen and `NAA_ID` on the LDEV
+screen. Registrations come from `raidcom` when CCI is installed; logins come from RMLIB. New in
+3.1: `vsptop -P` encrypts the passwords in `vsptop.conf` (`pass=enc:…`, `pass=ask` prompts
+instead), and the footer shows `new: x.y.z` when a newer release exists (`VERSIONCHECK=0`
+turns the check off).
 
 Upgrading from 2.x: `genarrayhash` and its cron job are gone — the first `vsptop` start
 rebuilds the topology from RMLIB (`vsptop -T -v` does it by hand). New in `vsptop.conf`:
