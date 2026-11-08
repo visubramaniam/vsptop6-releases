@@ -92,7 +92,7 @@ in `PATH`.
 From the GitHub release (the `.el9` RPM works on RHEL/Rocky/Alma 9):
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v3.0.1/vsptop6-3.0.1-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.3/vsptop6-4.0.3-1.el9.x86_64.rpm
 ```
 
 `dnf` fetches `ncurses-libs`, `sqlite-libs` and `openssl-libs` from the OS repositories, runs the

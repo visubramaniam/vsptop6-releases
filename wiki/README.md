@@ -6,7 +6,7 @@
 # 1. prerequisite on the host: the Hitachi RAID Manager Library (/usr/lib64/libsvrrm.so)
 #    (CCI / raidcom is optional: full-length host-group names and NVMe subsystem ids)
 # 2. install
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.0/vsptop6-4.0.0-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.3/vsptop6-4.0.3-1.el9.x86_64.rpm
 # 3. configure: arrays, array user/password (see Configure for password rules), command devices
 vi /usr/local/san/vsp/conf/vsptop.conf
 vsptop -P              # optional: encrypt the passwords you just typed (pass=enc:...)
@@ -76,7 +76,10 @@ therefore also a zoning / registration audit: "logged in but not registered" and
 but never logged in" are both visible at a glance. Logins come from RMLIB; registrations come
 from `raidcom` (`get hba_wwn` / `get hba_iscsi` / `get host_nqn`) during the topology refresh,
 so without CCI the screen shows only the logins. The array reports iSCSI logins under internal
-ids and NVMe hosts are not in the login table, so IQN and NQN rows show `LOGIN -`. Related columns elsewhere: `nWWN` on the ports
+ids and NVMe hosts are not in the login table, so IQN and NQN rows show `LOGIN -`. `Enter`/`l`
+on a row list the LDEVs behind its target (the namespaces of its NVMe subsystem for an NQN),
+`p` the target's ports; the INITIATOR and TARGET columns widen to their longest value as far as
+the terminal allows, so a full NQN or IQN is readable (4.0.1). Related columns elsewhere: `nWWN` on the ports
 screen (initiators logged in now), `WWNS` on the host-group screen (registered initiators),
 and `NAA_ID` on the LDEV screen (last column — `/` searches it, so a host-side
 `naa.60060e80…` finds its LDEV).
@@ -87,6 +90,7 @@ and `NAA_ID` on the LDEV screen (last column — `/` searches it, so a host-side
 vsptop  [-c vsptop.conf] [-s serial[:screen[:scope:key]]] [-D] [-t ticks]
    -s 970272                 start on that array's LDEV screen
    -s 970272:ports           start on its port screen (ldevs | hgs | mpbs | ports | inits)
+   -s 970272:ldevs:nvmss:15  start scoped to an NVMe subsystem (hg | ldev | mpb | port | nvmss)
    -s 970272:ldevs:hg:esx01  start scoped to a host group (hg | ldev | mpb | port)
    -D                        print the screen as text instead of curses (scripts, ssh without a tty)
    -t N                      exit after N refreshes (with -D)
@@ -117,6 +121,7 @@ edge of the footer when there is one; `[GENERAL] VERSIONCHECK=0` in `vsptop.conf
 | host-group names end after 16 characters, `NVMSSID` shows 0, 1, 2… | RMLIB's limit; install CCI (`raidcom`) and the next refresh fills in the full names and subsystem ids ([Configure](Configure) section 2) |
 | `LNKSPD` shows `AUTO` on a port | the link was down when the topology was built, or the array did not report it: `vsptop -T -s <serial>` once the link is up, or set it in `[LNKSPD]` |
 | INITIATORS shows only amber rows / `WWNS` is 0 | registrations need CCI: install `raidcom` and configure the HORCM instance ([Configure](Configure) section 2); the next topology refresh fills them in |
+| `vsptop -T -v` reports thousands of `raidcom calls` and minutes | 4.0.0–4.0.2 asked `get hba_wwn` for every host group id of every port, defined or not; 4.0.3 asks only defined groups (a 16-port array with ~100 real groups: ~260 calls, ~35 s, in the background) |
 | `LOGIN` is `-` for an IQN or NQN | the array reports iSCSI logins under internal ids and NVMe hosts are not in the login table; FC logins are matched by WWN |
 | `vsptop.conf: ... key is missing` | the conf holds `pass=enc:` values but `conf/.key` is gone (new host, restored conf): run `vsptop -P -s <serial>` for each array and re-enter the passwords ([Configure](Configure) section 3a) |
 | no `new: x.y.z` ever appears | either you are on the latest release or the host has no outbound HTTPS / no `curl` (the check fails silently; `vsptop -V` then prints just the version). `VERSIONCHECK=0` turns the check off on such hosts |
