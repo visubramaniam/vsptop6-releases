@@ -53,7 +53,7 @@ the HORCM instance from section 2 running, `vsptop -T -v` also prints `raidcom -
 characters (the RMLIB limit) and NVMe subsystems are numbered by position instead of by
 their subsystem id. With it, vsptop6 expects **one instance that knows all the arrays**; each
 topology refresh logs in (`raidcom -login -IH<n>`, answering the prompts per serial) and runs
-`raidcom get host_grp -key host_grp` per port, `raidcom get nvm_subsystem`, and (4.0) `raidcom get hba_wwn` / `get hba_iscsi` per host group and `get host_nqn` per NVMe subsystem for the INITIATORS screen's registrations, all with `-IH<n> -s <serial>`. On an array with a few hundred host groups that is a few hundred `raidcom` calls per refresh, in the background. Instance `0` is the default
+`raidcom get host_grp -key host_grp` per port, `raidcom get nvm_subsystem`, and (4.0) `raidcom get hba_wwn` / `get hba_iscsi` per host group and `get host_nqn` per NVMe subsystem for the INITIATORS screen's registrations, all with `-IH<n> -s <serial>` — one `raidcom` call per *defined* host group (the `-key host_grp` listing also shows every unused group id as `-`; those get no call) plus one per port and per NVMe subsystem, about 0.13 s each on a local HORCM, in the background (`vsptop -T -v` prints the count and the seconds they took). The port-only `get hba_wwn -port CLx-y` form is not used: CCI answers it with host group 0 only. Instance `0` is the default
 (`[HORCM] INST=0` in `vsptop.conf`).
 
 Create `/etc/horcm0.conf`:

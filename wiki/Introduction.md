@@ -84,6 +84,9 @@ The RPM installs two programs that share everything but the screen layout:
   and, since 4.0, the WWNs / IQNs / host NQNs registered in each host group, iSCSI target and
   NVMe subsystem. Without it, long names are cut at 16 characters, NVMe subsystems are
   numbered by position and the INITIATORS screen shows logins only. Nothing else depends on it.
+  The registrations cost one `raidcom` call per defined host group per refresh (about 260
+  calls and 35 s on a 16-port array with ~100 host groups, in the background; `vsptop -T -v`
+  prints the count and time).
 - **`loginstat`** (4.0) runs only while the PORTS or INITIATORS screen is up and re-reads each
   port's login table every refresh, so `LOGIN` and `nWWN` follow logins as they happen.
 - **`vsptop`** starts the collectors it needs for the current screen, reads their output, joins
