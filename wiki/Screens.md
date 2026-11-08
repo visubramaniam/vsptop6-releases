@@ -80,6 +80,8 @@ from the port's login table, re-read every refresh while the screen is up; `-` f
 the array reports under internal ids, and for NQNs), the port, the target it is registered in (host group,
 iSCSI target or NVMe subsystem) and the number of LDEVs behind that target. Every FC login that
 is registered in no host group on its port gets an extra amber row with target `-`, so the
-screen doubles as a zoning / registration audit. `Enter` lists the LDEVs the initiator can
-reach. Registrations need CCI (`raidcom`); without it only the logins are shown. A screenshot
-from the lab array will follow.
+screen doubles as a zoning / registration audit. `Enter` or `l` lists the LDEVs the initiator
+can reach (for an NQN, the namespaces of its NVMe subsystem) and `p` the target's ports; the
+INITIATOR and TARGET columns widen to their longest value as far as the terminal allows, so a
+68-character NQN is shown whole on a wide terminal. Registrations need CCI (`raidcom`); without
+it only the logins are shown. A screenshot from the lab array will follow.

@@ -17,7 +17,7 @@ present it adds host-group names longer than 16 characters and NVMe subsystem id
 topology; everything else comes from RMLIB over the command device.
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.0/vsptop6-4.0.0-1.el9.x86_64.rpm   # or the latest on the Releases page
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.3/vsptop6-4.0.3-1.el9.x86_64.rpm   # or the latest on the Releases page
 ```
 
 `dnf` pulls in `ncurses-libs`, `sqlite-libs` and `openssl-libs`. Then:
@@ -32,7 +32,9 @@ vspdash                                    # the same monitor as a dashboard (UT
 New in 4.0: the **INITIATORS** screen (`i`/`I`) — every registered FC WWN / iSCSI IQN / NVMe
 host NQN per port with its live login state, target and LDEVs, plus logins that are registered
 nowhere; `nWWN` on the ports screen, `WWNS` on the host-group screen and `NAA_ID` on the LDEV
-screen. Registrations come from `raidcom` when CCI is installed; logins come from RMLIB. New in
+screen. Registrations come from `raidcom` when CCI is installed; logins come from RMLIB
+(4.0.1–4.0.3: full-width NQNs/IQNs, `l`/`p` from an NQN row scope to its subsystem, and the
+registration calls trimmed to defined host groups only). New in
 3.1: `vsptop -P` encrypts the passwords in `vsptop.conf` (`pass=enc:…`, `pass=ask` prompts
 instead), and the footer shows `new: x.y.z` when a newer release exists (`VERSIONCHECK=0`
 turns the check off).

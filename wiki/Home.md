@@ -17,5 +17,5 @@ Latest release: see the [Releases](https://github.com/visubramaniam/vsptop6-rele
 Install in one line (RHEL / Rocky / Alma 9, x86_64, with the RAID Manager Library already present):
 
 ```sh
-dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.0/vsptop6-4.0.0-1.el9.x86_64.rpm
+dnf install https://github.com/visubramaniam/vsptop6-releases/releases/download/v4.0.3/vsptop6-4.0.3-1.el9.x86_64.rpm
 ```
